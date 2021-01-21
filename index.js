@@ -19,7 +19,11 @@ app.get("/", (req, res) => {
 });
 
 app.get("/device/new", async (req, res) => {
-  const info = await dbapi.deviceInfo();
+  var ip = req.headers['x-forwarded-for'] || 
+     req.connection.remoteAddress || 
+     req.socket.remoteAddress ||
+     (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  const info = await dbapi.deviceInfo(ip);
   const fixedInfo = await dataConverter.llDataForReplacement(info);
   res.send({ ...fixedInfo });
 });

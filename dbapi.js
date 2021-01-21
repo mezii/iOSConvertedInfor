@@ -9,14 +9,14 @@ let token = async function getToken() {
   });
   return data.data.accessToken;
 };
-let deviceInfo = async function getDeviceInfo() {
+let deviceInfo = async function getDeviceInfo(ipaddress) {
   const token = await this.token();
   const header = {
     "x-access-token": token,
     Network: "Appsflyer",
     Bundle: "com.apple.mobilesafari",
   };
-  const info = await axios.get(deviceInfoUrl, { headers: header });
+  const info = await axios.get(deviceInfoUrl, { headers: header,data: {"clientIp": ipaddress} });
   return info.data;
 };
 

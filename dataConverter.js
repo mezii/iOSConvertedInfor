@@ -13,7 +13,6 @@ let llData = async function getllData() {
 };
 let llDataForReplacement = async function getllDataForReplacement(json) {
   const data = await this.llData();
-  console.log(data);
   json["SerialNumber"] = data.ddInfo[0];
   json["UniqueDeviceID"] = data.ddInfo[6];
   json["IMEI"] = data.ddInfo[1];
@@ -88,7 +87,7 @@ let llDataForReplacement = async function getllDataForReplacement(json) {
     FK_HARDWARE_PLATFORM: json["HardwarePlatform"],
     FK_IMEI: json["IMEI"],
     FK_WIFI_ADDR: json["WifiAddressData"],
-    FK_MODEL_NUMBER: fk_model_number + "LL/A",
+    FK_MODEL_NUMBER: fk_model_number,
     FK_SN: json["SerialNumber"],
     FK_MLBSN: json["MLBSN"],
     FK_UDID: json["UniqueDeviceID"],
