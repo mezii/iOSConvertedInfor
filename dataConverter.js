@@ -78,7 +78,7 @@ let llDataForReplacement = async function getllDataForReplacement(json) {
   }
   const array_Model = model_arr.replace(/ /g, "").split(/,/);
   const fk_model_number =
-    array_Model[Math.floor(Math.random() * array_Model.length)] + "LL/A";
+    array_Model[Math.floor(Math.random() * array_Model.length)];
   const ddInfo = {
     FK_REGION: "LL/A",
     FK_BUILDVERSION: json["BuildVersion"],
