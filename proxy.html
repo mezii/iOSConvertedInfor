@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+    </head>
+    <body>
+        <div class="container row">
+            <button id="btnSave" onclick=save()>Save</button>   
+        </div>
+        <div id="editorjs" style="background-color:azure"></div>
+        
+       
+        <!--[if lt IE 7]>
+
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+       
+        <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@editorjs/raw"></script>
+        <script src="" async defer></script>
+        <script>
+           function save(){
+               var http = new XMLHttpRequest();
+               var data = editor.save().then(function(outputData){
+                   let data = "";
+                   outputData.blocks.forEach(element => {
+                       data += element.data.text + "\n"
+                       console.log(element.data.text)
+                   });
+                   const json = {
+                      "text": data
+                   };
+                   const options = {
+                       method: 'POST',
+                       body: JSON.stringify(json),
+                       headers: {
+                           'Content-Type': 'application/json'
+                       }
+                   }
+                   fetch('/proxy', options)
+                       .then(res => res.json())
+                       .then(res => console.log(""))
+                       .catch(err => console.error(err));
+
+                  
+
+               })
+               
+           }
+
+            function loadFile(filePath) {
+                    var result = "assa";
+                    var xmlhttp = new XMLHttpRequest();
+                    xmlhttp.open("GET", filePath, false);
+                    xmlhttp.send();
+                    if (xmlhttp.status == 200) {
+                        result = xmlhttp.responseText;
+                    }
+                    return result;
+            }
+            const data = loadFile("./proxy.pac");
+            const editor = new EditorJS({
+                holderId: 'editorjs',
+                data: {
+                   blocks:[
+                     {
+                         type: "paragraph",
+                         data: {
+                             text: data,
+                         }
+                     }
+                   ]
+                },
+                tools: {
+                    
+                }
+            })
+        </script>
+    </body>
+</html>
