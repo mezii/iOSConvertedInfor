@@ -83,7 +83,7 @@ let llDataForReplacement = async function getllDataForReplacement(json) {
   const fk_model_number =
     array_Model[Math.floor(Math.random() * array_Model.length)];
   const ddInfo = {
-    FK_REGION: "LL/A",
+    FK_REGION: "J/A",
     FK_BUILDVERSION: json["BuildVersion"],
     FK_PRODUCT_VERSION: json["ProductVersion"],
     FK_BLUETOOTH_ADDR: json["BluetoothAddress"],
