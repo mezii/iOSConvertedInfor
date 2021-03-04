@@ -1,4 +1,5 @@
 const fs = require("fs");
+const {iphone} = require("./iphone")
 let llData = async function getllData() {
   const data = await fs.readFileSync("./data.txt", {
     encoding: "utf8",
@@ -11,6 +12,7 @@ let llData = async function getllData() {
     ),
   };
 };
+
 let llDataForReplacement = async function getllDataForReplacement(json) {
   const data = await this.llData();
   json["SerialNumber"] = data.ddInfo[0];
@@ -21,6 +23,7 @@ let llDataForReplacement = async function getllDataForReplacement(json) {
   json["BluetoothAddress"] = data.ddInfo[4];
   json["ECID"] = data.ddInfo[5];
   json["MLBSN"] = data.ddInfo[7];
+  json["Model_Number"] = data.ddInfo[9]
   //
   let model_arr;
   switch (json["ProductType"]) {
@@ -87,7 +90,7 @@ let llDataForReplacement = async function getllDataForReplacement(json) {
     FK_HARDWARE_PLATFORM: json["HardwarePlatform"],
     FK_IMEI: json["IMEI"],
     FK_WIFI_ADDR: json["WifiAddressData"],
-    FK_MODEL_NUMBER: fk_model_number,
+    FK_MODEL_NUMBER: json["Model_Number"],
     FK_SN: json["SerialNumber"],
     FK_MLBSN: json["MLBSN"],
     FK_UDID: json["UniqueDeviceID"],
@@ -97,7 +100,7 @@ let llDataForReplacement = async function getllDataForReplacement(json) {
     FK_ENABLE: true,
   };
   json["ddData"] = ddInfo;
-
+  json["ModelName"] = iphone[json["ProductType"]];
   return json;
 };
 module.exports = { llData, llDataForReplacement };

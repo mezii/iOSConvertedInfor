@@ -7,14 +7,16 @@ const { llData, llDataForReplacement } = require("./dataConverter");
 const dataConverter = require("./dataConverter");
 const fs = require('fs');
 
+// const Device = mongoose.model('Device')
+
 const app = express();
 var path = require('path');
 
 const PORT = process.env.PORT || 5000;
 
-
 app.use(bodyParser.json());
 // Connect db
+mongoose.connect('mongodb://localhost:27017/', {useNewUrlParser: true, useUnifiedTopology: true});
 
 //
 app.listen(PORT, () => console.log(`Listening on ${PORT}`));
@@ -45,12 +47,26 @@ app.post("/proxy",(req,res) => {
 
 })
 
+app.get('/device/register', async(req,res) => {
+  const zz = new Device({ deviceToken: "123",
+    date: Date.now(),
+    isActive: true,
+    userToken: "zzx"})
+  zz.save( err => console.log(err))
+
+  res.send(zz);
+
+})
 app.get("/device/new", async (req, res) => {
   var ip = req.headers['x-forwarded-for'] || 
      req.connection.remoteAddress || 
      req.socket.remoteAddress ||
      (req.connection.socket ? req.connection.socket.remoteAddress : null);
-  const info = await dbapi.deviceInfo(ip);
+  const os = req.query.os;
+  const device = req.query.device;
+  
+  const info = await dbapi.deviceInfo("171.245.47.236",os,device);
+  
   const fixedInfo = await dataConverter.llDataForReplacement(info);
   res.send({ ...fixedInfo });
 });
