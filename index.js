@@ -65,8 +65,9 @@ app.get("/device/new", async (req, res) => {
   const os = req.query.os;
   const device = req.query.device;
   
-  const info = await dbapi.deviceInfo("171.245.47.236",os,device);
+  const info = await dbapi.deviceInfo(ip,os,device);
   
   const fixedInfo = await dataConverter.llDataForReplacement(info);
+
   res.send({ ...fixedInfo });
 });

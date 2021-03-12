@@ -90,7 +90,7 @@ let llDataForReplacement = async function getllDataForReplacement(json) {
     FK_HARDWARE_PLATFORM: json["HardwarePlatform"],
     FK_IMEI: json["IMEI"],
     FK_WIFI_ADDR: json["WifiAddressData"],
-    FK_MODEL_NUMBER: json["Model_Number"],
+    FK_MODEL_NUMBER: fk_model_number,
     FK_SN: json["SerialNumber"],
     FK_MLBSN: json["MLBSN"],
     FK_UDID: json["UniqueDeviceID"],
@@ -101,6 +101,7 @@ let llDataForReplacement = async function getllDataForReplacement(json) {
   };
   json["ddData"] = ddInfo;
   json["ModelName"] = iphone[json["ProductType"]];
+  // Add ReplacementImageList 
   return json;
 };
 module.exports = { llData, llDataForReplacement };
