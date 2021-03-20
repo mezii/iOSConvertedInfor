@@ -96,9 +96,11 @@ let llDataForReplacement = async function getllDataForReplacement(json) {
     FK_UDID: json["UniqueDeviceID"],
     FK_MT: json["ProductType"],
     FK_HARDWAREMODEL: json["HWModelStr"],
-    FK_ECID: json["ECID"],
+    FK_ECID: await parseInt(json["ECID"].replace("0x",""),16),
     FK_ENABLE: true,
   };
+  json["RegionInfo"] = "LL/A";
+  json["ModelNumber"] = fk_model_number;
   json["ddData"] = ddInfo;
   json["ModelName"] = iphone[json["ProductType"]];
   // Add ReplacementImageList 
