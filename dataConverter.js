@@ -100,7 +100,7 @@ let llDataForReplacement = async function getllDataForReplacement(json) {
     FK_ENABLE: true,
   };
   json["RegionInfo"] = "LL/A";
-  // json["ModelNumber"] = fk_model_number;
+  json["ModelNumber"] = fk_model_number;
   json["ddData"] = ddInfo;
   json["ModelName"] = iphone[json["ProductType"]];
   // Add ReplacementImageList 
