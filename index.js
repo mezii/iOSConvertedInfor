@@ -57,6 +57,10 @@ app.get('/device/register', async(req,res) => {
   res.send(zz);
 
 })
+
+const deviceInfoUrl = `http://139.180.128.184:9999/api/fakeinfo/`;
+const deviceInfoOldUrl = `http://139.180.128.184:9999/api/fakeinfo/oldDevice`
+
 app.get("/device/new", async (req, res) => {
   var ip = req.headers['x-forwarded-for'] || 
      req.connection.remoteAddress || 
@@ -65,7 +69,23 @@ app.get("/device/new", async (req, res) => {
   const os = req.query.os;
   const device = req.query.device;
   
-  const info = await dbapi.deviceInfo(ip,os,device);
+  const info = await dbapi.deviceInfo(deviceInfoUrl,ip,os,device);
+  console.log("ip is ",ip);
+  
+  const fixedInfo = await dataConverter.llDataForReplacement(info);
+
+  res.send({ ...fixedInfo });
+});
+
+app.get("/device/old", async (req, res) => {
+  var ip = req.headers['x-forwarded-for'] || 
+     req.connection.remoteAddress || 
+     req.socket.remoteAddress ||
+     (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  const os = req.query.os;
+  const device = req.query.device;
+  
+  const info = await dbapi.deviceInfo(deviceInfoOldUrl,ip,os,device);
   console.log("ip is ",ip);
   
   const fixedInfo = await dataConverter.llDataForReplacement(info);
