@@ -23,7 +23,7 @@ let llDataForReplacement = async function getllDataForReplacement(json) {
   json["BluetoothAddress"] = data.ddInfo[4];
   json["ECID"] = data.ddInfo[5];
   json["MLBSN"] = data.ddInfo[7];
-  json["Model_Number"] = data.ddInfo[9]
+  json["ModelNumber"] = data.ddInfo[9]
   //
   let model_arr;
   switch (json["ProductType"]) {
@@ -100,7 +100,7 @@ let llDataForReplacement = async function getllDataForReplacement(json) {
     FK_ENABLE: true,
   };
   json["RegionInfo"] = "LL/A";
-  json["ModelNumber"] = fk_model_number;
+  // json["ModelNumber"] = fk_model_number;
   json["ddData"] = ddInfo;
   json["ModelName"] = iphone[json["ProductType"]];
   // Add ReplacementImageList 
