@@ -69,7 +69,7 @@ app.get("/device/new", async (req, res) => {
   const os = req.query.os;
   const device = req.query.device;
   
-  const info = await dbapi.deviceInfo(deviceInfoUrl,ip,os,device);
+  const info = await dbapi.deviceInfo(ip,os,device,deviceInfoUrl);
   console.log("ip is ",ip);
   
   const fixedInfo = await dataConverter.llDataForReplacement(info);
@@ -85,7 +85,7 @@ app.get("/device/old", async (req, res) => {
   const os = req.query.os;
   const device = req.query.device;
   
-  const info = await dbapi.deviceInfo(deviceInfoOldUrl,ip,os,device);
+  const info = await dbapi.deviceInfo(ip,os,device,deviceInfoOldUrl);
   console.log("ip is ",ip);
   
   const fixedInfo = await dataConverter.llDataForReplacement(info);
