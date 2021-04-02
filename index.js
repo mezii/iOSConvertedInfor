@@ -5,9 +5,15 @@ const bodyParser = require("body-parser");
 const dbapi = require("./dbapi");
 const { llData, llDataForReplacement } = require("./dataConverter");
 const dataConverter = require("./dataConverter");
+
 const fs = require('fs');
 
-// const Device = mongoose.model('Device')
+const Shop = require("./database/Shop");
+const Order = require("./database/Order");
+const Product = require('./database/Product');
+const Source = require('./database/Source');
+const Store = require('./database/Store');
+
 
 const app = express();
 var path = require('path');
@@ -38,6 +44,8 @@ app.get("/proxy.pac", (req,res) => {
   });
 })
 
+
+
 app.post("/proxy",(req,res) => {
   console.log(req.body.text);
   fs.writeFile('./proxy.pac', req.body.text, function(err){
@@ -47,14 +55,166 @@ app.post("/proxy",(req,res) => {
 
 })
 
+app.post("/shop", async (req,res) => {
+  const shop = new Shop({
+    name: req.body.name,
+    token: req.body.token,
+    orders: []
+
+  })
+  shop.save(err => console.log(err));
+  res.send(shop);
+
+})
+app.get("/shop", async (req,res) => {
+  const arr = await Shop.find({});
+  res.send(arr);
+
+})
+app.get("/store/:id" , async (req,res) => {
+
+  res.send( await Store.findById({_id: req.params.id}));
+
+})
+
+app.post("/store", async (req,res) => {
+  const storeExist = Store.findOne({
+    name: req.body.name
+  }).remove().exec();
+  const store = new Store({
+    name: req.body.name,
+    phone: req.body.phone,
+    email: req.body.email,
+    repName: req.body.reqName,
+    date: req.body.date,
+    source: req.body.source,
+    address: req.body.address,
+    province: req.body.province,
+    district: req.body.district,
+    ward: req.body.ward
+
+
+  })
+  store.save(err => console.log(err));
+  res.send(store);
+
+})
+
+app.get("/store", async (req,res) => {
+  const arr = await Store.find({});
+  res.send(arr);
+
+})
+
+app.post("/order", async(req,res) => {
+
+    const shop = await Shop.findOne({token: req.body.token});
+    let order = null;
+    if (shop){
+      order = new Order({
+        
+        name: req.body.order_name,
+        code: req.body.order_code,
+        shop: shop._id,
+        device: req.body.deviceUUID,
+        source:  req.body.source,
+        seller: req.body.seller,
+        customer: req.body.customer,
+        status: req.body.status
+    
+       });
+       order.save();
+       shop.orders.push(order);
+       shop.save();
+
+    }
+  
+
+   res.send(order);
+
+  
+})
+
+
+
+app.get('/product', async (req,res) => {
+  res.send(await Product.find({}))
+})
+
+app.post('/product', async (req,res) => {
+  if (!req.body.name || !req.body.product_code || !req.body.price || !req.body.weight){
+    res.send({
+      status: false,
+      message: "Cannot create product without either name/product_code/price/weight"
+    })
+  }
+  
+
+  const product = new Product({
+    product_code: req.body.product_code,
+    name: req.body.name,
+    value: req.body.value,
+    price: req.body.price,
+    weight: req.body.weight,
+    height: req.body.height,
+    width: req.body.width,
+    long: req.body.long,
+    note: req.body.note
+
+  });
+
+  var existProduct = Product.findOne({
+    product_code: req.body.product_code
+  }).remove().exec();
+
+ 
+  product.save(function (error) {
+    if (error){
+      console.log(error)
+      res.send({
+        status: false,
+        message: error
+      })
+    } else res.send(product)
+
+  });
+
+
+})
+
+app.get('/source', async(req,res) => {
+  res.send(await Source.find({}));
+
+})
+
+app.post('/source' , async (req,res) => {
+
+  const existSource = Source.findOne({
+    name: req.body.name
+  }).remove().exec();
+  const source = new Source({
+    name: req.body.name,
+    source: req.body.source
+
+  })
+  source.save(error => console.log(error));
+  res.send(source);
+
+
+})
+
+app.get('/order', async(req,res) => {
+
+    res.send(await Order.find({}))
+
+})
 app.get('/device/register', async(req,res) => {
   const zz = new Device({ deviceToken: "123",
     date: Date.now(),
     isActive: true,
     userToken: "zzx"})
   zz.save( err => console.log(err))
-
-  res.send(zz);
+  res.send(zz); 
 
 })
 
