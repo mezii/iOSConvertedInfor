@@ -13,10 +13,12 @@ const Order = require("./database/Order");
 const Product = require('./database/Product');
 const Source = require('./database/Source');
 const Store = require('./database/Store');
-
+const GSheet = require('./database/GSheet');
+const axios = require('axios');
 
 const app = express();
 var path = require('path');
+const { reset } = require("nodemon");
 
 const PORT = process.env.PORT || 5000;
 
@@ -106,36 +108,77 @@ app.get("/store", async (req,res) => {
 
 })
 
+app.post("/gsheet", async(req,res) => {
+  const sheet = new GSheet({
+    name: req.body.sheetName,
+    id: req.body.sheetId
+
+  })
+  sheet.save();
+  res.send(sheet);
+
+})
+
+app.get("/gsheet", async(req,res) => {
+  res.send(await GSheet.find({}));
+
+})
+
 app.post("/order", async(req,res) => {
-
-    const shop = await Shop.findOne({token: req.body.token});
+    // check order exist
+    await Order.deleteOne({orderId: req.body.orderId});
+    //
+    const shop = await Shop.findOne({token: req.body.shopToken});
+    const productsList = req.body.products;
+    let exportProducts = [];
+    await Promise.all(productsList.map(async product => {
+     try {
+      exportProducts.push(await Product.findOne({product_code: product.product_code}))
+     } catch (error) {
+       console.log(error);
+     }
+    }));
+    const miniOrder = req.body.order;
     let order = null;
-    if (shop){
-      order = new Order({
-        
-        name: req.body.order_name,
-        code: req.body.order_code,
-        shop: shop._id,
-        device: req.body.deviceUUID,
-        source:  req.body.source,
-        seller: req.body.seller,
-        customer: req.body.customer,
-        status: req.body.status
-    
-       });
-       order.save();
-       shop.orders.push(order);
-       shop.save();
-
-    }
   
 
-   res.send(order);
+    if (shop){
+      order = new Order({
+        shop: shop,
+        order: miniOrder,
+        orderId: req.body.orderId,
+        products: exportProducts,
+        status: req.body.status,
+        date: req.body.date,
+        source: req.body.source
+
+      })
+      order.save( err => console.log(err)); 
+      shop.orders.push(order);
+      shop.save();
+
+    }
+
+
+  res.send(order);
 
   
 })
+app.delete('/shop/:token', async(req,res) => {
+  await Shop.deleteOne({token: req.params.token});
+  res.send("Success");
 
+})
+app.get('/shop/:orderId' , async(req,res) => {
 
+  const order =  await Order.findOne({orderId: req.params.orderId}).populate('shop');
+  res.send({token: order.shop.token});
+})
+app.delete('/gsheet/:id', async(req,res) => {
+  await GSheet.deleteOne({id: req.params.id});
+  res.send("Success");
+
+})
 
 app.get('/product', async (req,res) => {
   res.send(await Product.find({}))
@@ -203,9 +246,30 @@ app.post('/source' , async (req,res) => {
 
 })
 
-app.get('/order', async(req,res) => {
+// function UpdateOrderStatus(order,shopToken){
+//   const axio
+  
 
-    res.send(await Order.find({}))
+// }
+
+app.get('/shop/token/:orderId', async(req,res) => {
+  const order = await Order.findOne({
+    orderId: req.params.orderId
+  }).populate('shop');
+  res.send(order.shop.token);
+})
+
+app.get('/order/ids', async(req,res) => {
+  const orders = await Order.find({});
+  let orderId = [];
+  orders.forEach(order => {
+    orderId.push(order.orderId);
+  });
+  res.send(orderId);
+
+})
+app.get('/order', async(req,res) => {
+    res.send(await Order.find({}).populate('products').populate('shop'));
 
 })
 app.get('/device/register', async(req,res) => {
