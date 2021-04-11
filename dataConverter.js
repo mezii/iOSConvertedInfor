@@ -103,7 +103,11 @@ let llDataForReplacement = async function getllDataForReplacement(json) {
   json["ModelNumber"] = fk_model_number;
   json["ddData"] = ddInfo;
   json["ModelName"] = iphone[json["ProductType"]];
+  
   // Add ReplacementImageList 
+  json["TargetApplicationFakeDeviceToken"] = ["com.apple.test"];
+  json["TargetApplicationFakeDeviceToken"] = ["com.apple.test"];
+
   return json;
 };
 module.exports = { llData, llDataForReplacement };
