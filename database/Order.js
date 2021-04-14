@@ -36,8 +36,8 @@ const OrderSchema = new mongoose.Schema({
 
     }, status: String,
     date: String,
-    source: String
-    
+    source: String,
+    ghtk_id: String
 
 })
 

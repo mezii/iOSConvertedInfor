@@ -19,6 +19,7 @@ const axios = require('axios');
 const app = express();
 var path = require('path');
 const { reset } = require("nodemon");
+const KiotViet = require("./database/KiotViet");
 
 const PORT = process.env.PORT || 5000;
 
@@ -105,6 +106,31 @@ app.post("/store", async (req,res) => {
 app.get("/store", async (req,res) => {
   const arr = await Store.find({});
   res.send(arr);
+
+})
+
+app.post("/kiotviet", async(req,res) => {
+   await KiotViet.deleteOne({client_id: req.body.client_id});
+  const kv = new KiotViet({
+    name: req.body.name,
+    client_id: req.body.client_id,
+    client_secret: req.body.client_secret
+
+  })
+  kv.save();
+  res.send(kv);
+
+})
+
+app.get("/kiotviet/:client_id", async (req,res) => {
+
+  res.send(await KiotViet.findOne({client_id: req.params.client_id}));
+
+})
+
+app.get("/kiotviet", async(req,res) => {
+
+  res.send(await KiotViet.find({}));
 
 })
 
@@ -252,6 +278,12 @@ app.post('/source' , async (req,res) => {
 
 // }
 
+app.get('/order/:orderId', async(req,res) => {
+    const order = await (await Order.findOne({orderId: req.params.orderId}).populate('shop').populate('products'));
+    res.send(order);
+
+})
+
 app.get('/shop/token/:orderId', async(req,res) => {
   const order = await Order.findOne({
     orderId: req.params.orderId
@@ -259,7 +291,7 @@ app.get('/shop/token/:orderId', async(req,res) => {
   res.send(order.shop.token);
 })
 
-app.get('/order/ids', async(req,res) => {
+app.get('/order/list/ids', async(req,res) => {
   const orders = await Order.find({});
   let orderId = [];
   orders.forEach(order => {
