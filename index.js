@@ -103,6 +103,8 @@ app.post("/store", async (req,res) => {
 
 })
 
+
+
 app.get("/store", async (req,res) => {
   const arr = await Store.find({});
   res.send(arr);
@@ -205,7 +207,11 @@ app.delete('/gsheet/:id', async(req,res) => {
   res.send("Success");
 
 })
+app.delete('/kiotviet/:clientId', async(req,res) => {
+  await KiotViet.deleteOne({client_id: req.params.clientId});
+  res.send("Success");
 
+})
 app.get('/product', async (req,res) => {
   res.send(await Product.find({}))
 })
