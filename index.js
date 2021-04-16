@@ -197,6 +197,11 @@ app.delete('/shop/:token', async(req,res) => {
   res.send("Success");
 
 })
+app.delete('/product/:product_code', async(req,res) => {
+ 
+  res.send( await Product.deleteOne({product_code: req.params.product_code}));
+
+})
 app.get('/shop/:orderId' , async(req,res) => {
 
   const order =  await Order.findOne({orderId: req.params.orderId}).populate('shop');
@@ -206,6 +211,11 @@ app.delete('/gsheet/:id', async(req,res) => {
   await GSheet.deleteOne({id: req.params.id});
   res.send("Success");
 
+})
+
+app.delete('/store/:_id', async(req,res) => {
+  res.send(await Store.deleteOne({_id: req.params._id}));
+  
 })
 app.delete('/kiotviet/:clientId', async(req,res) => {
   await KiotViet.deleteOne({client_id: req.params.clientId});
