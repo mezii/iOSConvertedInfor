@@ -302,6 +302,11 @@ app.get('/order/:orderId', async(req,res) => {
 
 })
 
+app.delete('/order/:orderId', async (req,res) => {
+  const order = await Order.deleteOne({orderId: req.params.orderId});
+  res.send(order);
+})
+
 app.get('/shop/token/:orderId', async(req,res) => {
   const order = await Order.findOne({
     orderId: req.params.orderId
