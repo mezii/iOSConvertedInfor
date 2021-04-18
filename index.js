@@ -14,6 +14,8 @@ const Product = require('./database/Product');
 const Source = require('./database/Source');
 const Store = require('./database/Store');
 const GSheet = require('./database/GSheet');
+const Combo = require('./database/Combo');
+
 const axios = require('axios');
 
 const app = express();
@@ -81,9 +83,9 @@ app.get("/store/:id" , async (req,res) => {
 })
 
 app.post("/store", async (req,res) => {
-  const storeExist = Store.findOne({
+  const storeExist = Store.deleteOne({
     name: req.body.name
-  }).remove().exec();
+  })
   const store = new Store({
     name: req.body.name,
     phone: req.body.phone,
@@ -248,9 +250,9 @@ app.post('/product', async (req,res) => {
 
   });
 
-  var existProduct = Product.findOne({
+  var existProduct = Product.deleteOne({
     product_code: req.body.product_code
-  }).remove().exec();
+  });
 
  
   product.save(function (error) {
@@ -364,3 +366,31 @@ app.get("/device/old", async (req, res) => {
 
   res.send({ ...fixedInfo });
 });
+
+app.get('/combo', async (req,res) => {
+  res.send(await Combo.find({}).populate('products'));
+
+})
+
+app.post('/combo', async (req,res) => {
+
+  let productsArr = [];
+  const pCodes = req.body.products;
+  for (const item in pCodes){
+      productsArr.push(pCodes[item]);
+
+  }
+  const combo = new Combo({
+    name: req.body.name,
+    products: productsArr,
+    weight: req.body.weight,
+    price: req.body.price,
+    product_code: Date.now()})
+  combo.save();
+  res.send(combo);
+
+})
+app.delete('/combo/:product_code', async(req,res) => {
+  
+  res.send(await Combo.deleteOne({product_code: req.params.product_code}));
+})
