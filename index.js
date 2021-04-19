@@ -229,13 +229,11 @@ app.get('/product', async (req,res) => {
 })
 
 app.post('/product', async (req,res) => {
-  if (!req.body.name || !req.body.product_code || !req.body.price || !req.body.weight){
-    res.send({
-      status: false,
-      message: "Cannot create product without either name/product_code/price/weight"
-    })
-  }
-  
+ 
+  var existProduct = Product.deleteOne({
+    product_code: req.body.product_code
+  });
+
 
   const product = new Product({
     product_code: req.body.product_code,
@@ -250,10 +248,7 @@ app.post('/product', async (req,res) => {
 
   });
 
-  var existProduct = Product.deleteOne({
-    product_code: req.body.product_code
-  });
-
+ 
  
   product.save(function (error) {
     if (error){
