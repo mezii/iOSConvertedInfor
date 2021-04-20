@@ -181,7 +181,9 @@ app.post("/order", async(req,res) => {
         status: req.body.status,
         date: req.body.date,
         source: req.body.source,
-        shopToken: shop.token
+        shopToken: shop.token,
+        shopName: shop.name,
+        note: req.body.note
       })
       order.save( err => console.log(err)); 
       shop.orders.push(order);

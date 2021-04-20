@@ -38,7 +38,9 @@ const OrderSchema = new mongoose.Schema({
     date: String,
     source: String,
     ghtk_id: String,
-    shopToken: String
+    shopToken: String,
+    shopName: String,
+    note: String
 
 })
 
