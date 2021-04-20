@@ -180,8 +180,8 @@ app.post("/order", async(req,res) => {
         products: exportProducts,
         status: req.body.status,
         date: req.body.date,
-        source: req.body.source
-
+        source: req.body.source,
+        shopToken: shop.token
       })
       order.save( err => console.log(err)); 
       shop.orders.push(order);
