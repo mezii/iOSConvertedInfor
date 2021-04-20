@@ -196,6 +196,10 @@ app.post("/order", async(req,res) => {
 
   
 })
+app.get('/order/deleteAll', async(req,res) => {
+  res.send(await Order.deleteMany({}));
+
+})
 app.delete('/shop/:token', async(req,res) => {
   await Shop.deleteOne({token: req.params.token});
   res.send("Success");
