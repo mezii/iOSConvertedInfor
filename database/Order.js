@@ -40,7 +40,9 @@ const OrderSchema = new mongoose.Schema({
     ghtk_id: String,
     shopToken: String,
     shopName: String,
-    note: String
+    note: String,
+    kiotvietId: String,
+    endUserName: String
 
 })
 

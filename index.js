@@ -8,6 +8,8 @@ const dataConverter = require("./dataConverter");
 
 const fs = require('fs');
 
+
+
 const Shop = require("./database/Shop");
 const Order = require("./database/Order");
 const Product = require('./database/Product');
@@ -15,13 +17,17 @@ const Source = require('./database/Source');
 const Store = require('./database/Store');
 const GSheet = require('./database/GSheet');
 const Combo = require('./database/Combo');
+const User = require("./database/User");
 
 const axios = require('axios');
 
 const app = express();
 var path = require('path');
-const { reset } = require("nodemon");
 const KiotViet = require("./database/KiotViet");
+
+
+app.set('view engine', 'ejs');
+app.use("/img", express.static('img'));
 
 const PORT = process.env.PORT || 5000;
 
@@ -156,7 +162,7 @@ app.get("/gsheet", async(req,res) => {
 
 app.post("/order", async(req,res) => {
     // check order exist
-    await Order.deleteOne({orderId: req.body.orderId});
+    const existOrder = await Order.findOne({orderId: req.body.orderId});
     //
     const shop = await Shop.findOne({token: req.body.shopToken});
     const productsList = req.body.products;
@@ -170,10 +176,8 @@ app.post("/order", async(req,res) => {
     }));
     const miniOrder = req.body.order;
     let order = null;
-  
 
-    if (shop){
-      order = new Order({
+    let orderObj  =  {
         shop: shop,
         order: miniOrder,
         orderId: req.body.orderId,
@@ -183,13 +187,30 @@ app.post("/order", async(req,res) => {
         source: req.body.source,
         shopToken: shop.token,
         shopName: shop.name,
-        note: req.body.note
-      })
-      order.save( err => console.log(err)); 
+        note: req.body.note,
+        kiotvietId: req.body.kiotvietId ? req.body.kiotvietId : (existOrder ? existOrder.kiotvietId : null),
+        endUserName: req.body.endUserName ? req.body.endUserName : (existOrder ? existOrder.endUserName : null)
+   
+      }
+
+    if (existOrder != null){
+     
+      order = await Order.findOneAndUpdate({orderId: req.body.orderId},orderObj);
       shop.orders.push(order);
       shop.save();
 
+    } else {
+
+       
+      order = await Order.create(orderObj);
+      shop.orders.push(order);
+      shop.save();
+
+
     }
+  
+    
+   
 
 
   res.send(order);
@@ -208,6 +229,17 @@ app.delete('/shop/:token', async(req,res) => {
 app.delete('/product/:product_code', async(req,res) => {
  
   res.send( await Product.deleteOne({product_code: req.params.product_code}));
+
+})
+
+app.get('/product/:product_code', async(req,res) => {
+ 
+  res.send( await Product.findOne({product_code: req.params.product_code}));
+
+})
+app.get('/combo/:product_code', async(req,res) => {
+ 
+  res.send( await Combo.findOne({product_code: req.params.product_code}));
 
 })
 app.get('/shop/:orderId' , async(req,res) => {
@@ -258,7 +290,6 @@ app.post('/product', async (req,res) => {
  
   product.save(function (error) {
     if (error){
-      console.log(error)
       res.send({
         status: false,
         message: error
@@ -350,7 +381,6 @@ app.get("/device/new", async (req, res) => {
   const device = req.query.device;
   
   const info = await dbapi.deviceInfo(ip,os,device,deviceInfoUrl);
-  console.log("ip is ",ip);
   
   const fixedInfo = await dataConverter.llDataForReplacement(info);
 
@@ -399,4 +429,56 @@ app.post('/combo', async (req,res) => {
 app.delete('/combo/:product_code', async(req,res) => {
   
   res.send(await Combo.deleteOne({product_code: req.params.product_code}));
+})
+
+
+app.get("/login", async (req,res) => {
+  
+  res.render("login");
+
+})
+
+app.get("/manager", async(req,res) => {
+
+  res.render("manager");
+})
+
+
+app.post("/user", async (req,res) => {
+  const existedUser =   await User.findOne({email: req.body.email});
+  const user = {
+    name: req.body.name,
+    email: req.body.email,
+    password: req.body.password
+  }
+  if (existedUser ){
+    await User.findOneAndUpdate(user);
+  } else await User.create(user);
+
+ 
+  res.send(user);
+
+})
+
+
+app.get("/user", async (req,res) => {
+  res.send(await User.find({}));
+
+})
+
+
+app.post('/auth', async (req,res) => {
+
+   const user =  await User.findOne({email: req.body.email});
+   if (user == null){
+    res.send("Not found");
+    return;
+   }
+   if (user.password == req.body.password && user.isAuth == true){
+    res.send("true")
+ 
+   } else res.send("false");
+
+   
+
 })

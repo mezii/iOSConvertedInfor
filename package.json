@@ -15,7 +15,8 @@
     "mongodb": "^3.6.3",
     "mongoose": "^5.11.8",
     "mongoose-auto-increment": "^5.0.1",
-    "nodemon": "^2.0.6"
+    "nodemon": "^2.0.6",
+    "server-static": "^2.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
