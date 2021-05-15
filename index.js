@@ -26,7 +26,6 @@ var path = require('path');
 const KiotViet = require("./database/KiotViet");
 
 
-app.set('view engine', 'ejs');
 app.use("/img", express.static('img'));
 
 const PORT = process.env.PORT || 5000;
@@ -322,11 +321,6 @@ app.post('/source' , async (req,res) => {
 
 })
 
-// function UpdateOrderStatus(order,shopToken){
-//   const axio
-  
-
-// }
 
 app.get('/order/:orderId', async(req,res) => {
     const order = await (await Order.findOne({orderId: req.params.orderId}).populate('shop').populate('products'));
@@ -432,32 +426,30 @@ app.delete('/combo/:product_code', async(req,res) => {
 })
 
 
-app.get("/login", async (req,res) => {
-  
-  res.render("login");
-
-})
-
 app.get("/manager", async(req,res) => {
-
-  res.render("manager");
+  res.sendFile(path.join(__dirname + "/views/manager.html"));
 })
 
 
 app.post("/user", async (req,res) => {
   const existedUser =   await User.findOne({email: req.body.email});
+  if (existedUser) return;
   const user = {
-    name: req.body.name,
     email: req.body.email,
-    password: req.body.password
+    password: req.body.password,
+    isAuth: req.body.isAuth,
+    isAdmin: req.body.isAdmin
   }
-  if (existedUser ){
-    await User.findOneAndUpdate(user);
-  } else await User.create(user);
+   await User.create(user);
 
  
   res.send(user);
 
+})
+
+app.delete("/user", async (req,res) => {
+ const user =  await User.deleteOne({email: req.body.email});
+  res.send(user)
 })
 
 
@@ -466,6 +458,13 @@ app.get("/user", async (req,res) => {
 
 })
 
+
+app.put("/user", async (req,res) => {
+
+  const existedUser = await User.findOne({email: req.body.email});
+  const user = await User.updateOne({email:req.body.email},{password: existedUser.password,isAuth: req.body.isAuth, isAdmin: req.body.isAdmin ? true : false})
+  res.send(user);
+})
 
 app.post('/auth', async (req,res) => {
 
