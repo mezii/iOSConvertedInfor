@@ -31,6 +31,8 @@ app.use("/img", express.static('img'));
 const PORT = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+
 // Connect db
 mongoose.connect('mongodb://localhost:27017/', {useNewUrlParser: true, useUnifiedTopology: true});
 
@@ -54,7 +56,17 @@ app.get("/proxy.pac", (req,res) => {
   });
 })
 
+app.post("/updateShipment", (req,res) => {
+    const data = req.body;
 
+    console.log(data);
+    fs.writeFile('./testpostback', JSON.stringify(data), 'utf8', function(err,data){
+        if (err)
+         console.log(err);
+        else res.send(data);
+    })
+    
+})
 
 app.post("/proxy",(req,res) => {
   console.log(req.body.text);
@@ -183,7 +195,7 @@ app.post("/order", async(req,res) => {
         products: exportProducts,
         status: req.body.status,
         date: req.body.date,
-        source: req.body.source,
+        source: req.boqady.source,
         shopToken: shop.token,
         shopName: shop.name,
         note: req.body.note,
