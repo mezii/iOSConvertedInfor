@@ -132,8 +132,9 @@ const ghtkStatus = { [-1]: "Hủy đơn hàng",
 410	: "Shipper báo delay giao hàng" 
 }
 app.post("/updateShipment", async (req,res) => {
-
+    console.log(req.body);
     const order = await Order.findOneAndUpdate({orderId: req.body.partner_id},{status: ghtkStatus[req.body.status_id],lastUpdatedGHTK: req.body.action_time});
+    console.log(order);
     if (order){
       io.sockets.emit("chat message","update");
       res.send("Successcce");
