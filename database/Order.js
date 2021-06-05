@@ -33,7 +33,7 @@ const OrderSchema = new mongoose.Schema({
         weight_option: String,
         hamlet: String
     },
-     status: String,
+    status: String,
     date: String,
     source: String,
     ghtk_id: String,
@@ -42,6 +42,7 @@ const OrderSchema = new mongoose.Schema({
     note: String,
     kiotvietId: String,
     endUserName: String,
+    lastUpdatedGHTK: String
 
 })
 
