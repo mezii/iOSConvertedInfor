@@ -133,7 +133,7 @@ const ghtkStatus = { [-1]: "Hủy đơn hàng",
 }
 app.post("/updateShipment", async (req,res) => {
 
-    const order = await Order.findOneAndUpdate({orderId: req.body.partner_id},{status: ghtkStatus[req.body.status_id],lastUpdated: req.body.action_time});
+    const order = await Order.findOneAndUpdate({orderId: req.body.partner_id},{status: ghtkStatus[req.body.status_id],lastUpdatedGHTK: req.body.action_time});
     if (order){
       io.sockets.emit("chat message","update");
       res.send("Successcce");
