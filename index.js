@@ -5,8 +5,14 @@ const bodyParser = require("body-parser");
 const dbapi = require("./dbapi");
 const { llData, llDataForReplacement } = require("./dataConverter");
 const dataConverter = require("./dataConverter");
-
 const fs = require('fs');
+const app = express();
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+
+
+
+
 
 
 
@@ -18,12 +24,15 @@ const Store = require('./database/Store');
 const GSheet = require('./database/GSheet');
 const Combo = require('./database/Combo');
 const User = require("./database/User");
-
-const axios = require('axios');
-
-const app = express();
-var path = require('path');
 const KiotViet = require("./database/KiotViet");
+
+
+
+var path = require('path');
+const { RSA_NO_PADDING, EDESTADDRREQ } = require("constants");
+
+
+mongoose.set('useFindAndModify', false);
 
 
 app.use("/img", express.static('img'));
@@ -37,10 +46,32 @@ app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 mongoose.connect('mongodb://localhost:27017/', {useNewUrlParser: true, useUnifiedTopology: true});
 
 //
-app.listen(PORT, () => console.log(`Listening on ${PORT}`));
 
-app.get("/", (req, res) => {
-  res.send(`Listening on dm ${PORT} `);
+const defaultKiotVietAccount = {
+  name: "Khác",
+  client_id: "askjashasjkasdhasjkadshjashja",
+  client_secret: "",
+  accounts: [],
+  products: []
+}
+
+
+
+
+
+
+
+
+
+// Pre-defined account
+KiotViet.findOneAndUpdate({client_id: "askjashasjkasdhasjkadshjashja"},defaultKiotVietAccount,{upsert: true, new: true, setDefaultsOnInsert: true },function(err,data){
+  if (err) console.log(err);
+})
+
+
+
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
 });
 
 app.get("/proxy", (req,res) => {
@@ -55,17 +86,39 @@ app.get("/proxy.pac", (req,res) => {
   res.send(data)
   });
 })
+app.post("/kiotviet/activeAccount", async(req,res) => {
+  const json =  JSON.stringify(req.body);
+  fs.writeFile("./currentKVAccount.json",json,'utf8',function(err){
+
+      if (err)
+        res.send(err);
+
+  })
+  res.send(req.body);
+
+
+})
+
+app.get("/kiotviet/activeAccount", async(req,res) => {
+  fs.readFile("./currentKVAccount.json",'utf8',function(err,data) {
+    if (err) res.send(err)
+    res.send(JSON.parse(data));
+
+  })
+
+})
 
 app.post("/updateShipment", (req,res) => {
-    const data = req.body;
+    // const data = req.body;
+    // /// POSTBACK
+    // fs.writeFile('./testpostback', JSON.stringify(data), 'utf8', function(err,data){
+    //     if (err)
+    //      console.log(err);
+    //     else res.send(data);
+    // })
+    io.sockets.emit("chat message","atest ");
+    res.send("Successcce");
 
-    console.log(data);
-    fs.writeFile('./testpostback', JSON.stringify(data), 'utf8', function(err,data){
-        if (err)
-         console.log(err);
-        else res.send(data);
-    })
-    
 })
 
 app.post("/proxy",(req,res) => {
@@ -135,8 +188,9 @@ app.post("/kiotviet", async(req,res) => {
   const kv = new KiotViet({
     name: req.body.name,
     client_id: req.body.client_id,
-    client_secret: req.body.client_secret
-
+    client_secret: req.body.client_secret,
+    accounts: req.body.accounts,
+    products: []
   })
   kv.save();
   res.send(kv);
@@ -151,7 +205,7 @@ app.get("/kiotviet/:client_id", async (req,res) => {
 
 app.get("/kiotviet", async(req,res) => {
 
-  res.send(await KiotViet.find({}));
+  res.send(await KiotViet.find({}).populate('products').populate('combos'));
 
 })
 
@@ -172,59 +226,69 @@ app.get("/gsheet", async(req,res) => {
 })
 
 app.post("/order", async(req,res) => {
-    // check order exist
-    const existOrder = await Order.findOne({orderId: req.body.orderId});
+    const existOrder = await Order.findOne({orderId: req.body.id});
     //
     const shop = await Shop.findOne({token: req.body.shopToken});
     const productsList = req.body.products;
-    let exportProducts = [];
-    await Promise.all(productsList.map(async product => {
-     try {
-      exportProducts.push(await Product.findOne({product_code: product.product_code}))
-     } catch (error) {
-       console.log(error);
-     }
-    }));
-    const miniOrder = req.body.order;
-    let order = null;
+ 
 
     let orderObj  =  {
         shop: shop,
-        order: miniOrder,
-        orderId: req.body.orderId,
-        products: exportProducts,
+        order: {
+          id: req.body.id,
+          pick_name: req.body.pick_name,
+          pick_money: req.body.pick_money,
+          pick_address: req.body.pick_address,
+          pick_district: req.body.pick_district,
+          pick_province: req.body.pick_province,
+          pick_ward: req.body.pick_ward,
+          pick_tel: req.body.pick_tel,
+          pick_email: req.body.pick_email,
+          tel: req.body.tel,
+          name: req.body.name,
+          address:req.body.address,
+          province: req.body.province,
+          ward: req.body.ward,
+          district: req.body.district,
+          street: req.body.street,
+          email: req.body.email,
+          hamlet: "Khác",
+          is_freeship: req.body.is_freeship,
+          note: req.body.note,
+          value: req.body.value,
+          transport: req.body.transport,
+          weight_option: "gram"
+
+        },
+        orderId: req.body.id,
+        products: productsList,
         status: req.body.status,
         date: req.body.date,
-        source: req.boqady.source,
+        source: req.body.source,
         shopToken: shop.token,
         shopName: shop.name,
         note: req.body.note,
         kiotvietId: req.body.kiotvietId ? req.body.kiotvietId : (existOrder ? existOrder.kiotvietId : null),
-        endUserName: req.body.endUserName ? req.body.endUserName : (existOrder ? existOrder.endUserName : null)
+        endUserName: req.body.endUserName ? req.body.endUserName : (existOrder ? existOrder.endUserName : null),
    
       }
+      let order ;
+    const result = await Order.findOneAndUpdate({orderId: req.body.id},orderObj,{upsert: true, new: true, setDefaultsOnInsert: true },function(error,result){
+      if (error) console.log(error);
+    })
 
-    if (existOrder != null){
-     
-      order = await Order.findOneAndUpdate({orderId: req.body.orderId},orderObj);
-      shop.orders.push(order);
+    if (!shop.orders.includes(result._id)){
+      shop.orders.push(result);
       shop.save();
+   }
+   
 
-    } else {
-
-       
-      order = await Order.create(orderObj);
-      shop.orders.push(order);
-      shop.save();
-
-
-    }
   
     
    
 
 
-  res.send(order);
+  res.send(result);
 
   
 })
@@ -233,12 +297,14 @@ app.get('/order/deleteAll', async(req,res) => {
 
 })
 app.delete('/shop/:token', async(req,res) => {
+
   await Shop.deleteOne({token: req.params.token});
   res.send("Success");
 
 })
 app.delete('/product/:product_code', async(req,res) => {
- 
+  const product =  await Product.findOne({product_code: req.params.product_code});
+  await KiotViet.updateOne({"products": product._id},{$pull: {"products": product._id}});
   res.send( await Product.deleteOne({product_code: req.params.product_code}));
 
 })
@@ -278,13 +344,8 @@ app.get('/product', async (req,res) => {
 })
 
 app.post('/product', async (req,res) => {
- 
-  var existProduct = Product.deleteOne({
-    product_code: req.body.product_code
-  });
-
-
-  const product = new Product({
+  const kiotviet = await KiotViet.findOne({_id: req.body.kiotvietId})
+  const product = {
     product_code: req.body.product_code,
     name: req.body.name,
     value: req.body.value,
@@ -293,21 +354,23 @@ app.post('/product', async (req,res) => {
     height: req.body.height,
     width: req.body.width,
     long: req.body.long,
-    note: req.body.note
+    note: req.body.note,
+    quantity: req.body.quantity,
+    kiotvietId: kiotviet
+  };
+  const result = await Product.findOneAndUpdate({product_code: req.body.product_code,kiotvietId: kiotviet},product,{upsert: true, new: true, setDefaultsOnInsert: true },function(error,result){
+      if (error) res.send(error);
+      return result;
+  })
+  if (!kiotviet.products.includes(result._id)){
+     kiotviet.products.push(result);
+     kiotviet.save();
+  }
+  
 
-  });
+  
+  res.send(result)
 
- 
- 
-  product.save(function (error) {
-    if (error){
-      res.send({
-        status: false,
-        message: error
-      })
-    } else res.send(product)
-
-  });
 
 
 })
@@ -341,7 +404,8 @@ app.get('/order/:orderId', async(req,res) => {
 })
 
 app.delete('/order/:orderId', async (req,res) => {
-  const order = await Order.deleteOne({orderId: req.params.orderId});
+  const order = await Order.findOneAndDelete({orderId: req.params.orderId});
+  await Shop.updateOne({"token": order.shopToken},{$pull: {"orders": order._id}});
   res.send(order);
 })
 
@@ -422,18 +486,35 @@ app.post('/combo', async (req,res) => {
       productsArr.push(pCodes[item]);
 
   }
+
   const combo = new Combo({
     name: req.body.name,
     products: productsArr,
     weight: req.body.weight,
     price: req.body.price,
-    product_code: Date.now()})
+    product_code: req.body.product_code ,
+    kiotvietId: req.body.kiotvietId,
+    quantity: req.body.quantity
+  })
+
+  // const result = await Product.findOneAndUpdate({product_code: req.body.product_code,kiotvietId: kiotviet},product,{upsert: true, new: true, setDefaultsOnInsert: true },function(error,result){
+  //     if (error) res.send(error);
+  //     return result;
+  // })
+  const kiotviet = await KiotViet.findOne({_id: req.body.kiotvietId});
+  console.log(kiotviet)
+  if (!kiotviet.combos.includes(combo._id)){
+    kiotviet.combos.push(combo);
+    kiotviet.save();
+  }
+ 
   combo.save();
   res.send(combo);
 
 })
 app.delete('/combo/:product_code', async(req,res) => {
-  
+  const combo =  await Combo.findOne({product_code: req.params.product_code});
+  await KiotViet.updateOne({"combos": combo._id},{$pull: {"combos": combo._id}});
   res.send(await Combo.deleteOne({product_code: req.params.product_code}));
 })
 
@@ -493,3 +574,17 @@ app.post('/auth', async (req,res) => {
    
 
 })
+
+// Kiotviet Account Schema
+//eg . sub accounts schema for kiotviet api
+
+
+io.on('connection', (socket) => {
+  socket.on('chat message', msg => {
+    io.emit('chat message', msg);
+  });
+});
+
+http.listen(PORT, () => {
+  console.log(`Luna server running at http://localhost:${PORT}/`);
+});

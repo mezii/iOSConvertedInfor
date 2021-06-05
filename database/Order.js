@@ -1,11 +1,8 @@
 const mongoose = require('mongoose');
-
+const Product = require('./Product').schema;
 const OrderSchema = new mongoose.Schema({
-     orderId: String,
-    products: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Product'
-    }],
+    orderId: String,
+    products: [Product],
     shop: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Shop'
@@ -31,10 +28,12 @@ const OrderSchema = new mongoose.Schema({
         is_freeship: String,
         note: String,
         value: Number,
-       
+        transport: String,
         use_return_address: 0,
-
-    }, status: String,
+        weight_option: String,
+        hamlet: String
+    },
+     status: String,
     date: String,
     source: String,
     ghtk_id: String,
@@ -42,7 +41,7 @@ const OrderSchema = new mongoose.Schema({
     shopName: String,
     note: String,
     kiotvietId: String,
-    endUserName: String
+    endUserName: String,
 
 })
 
