@@ -40,7 +40,7 @@ const OrderSchema = new mongoose.Schema({
     shopToken: String,
     shopName: String,
     note: String,
-    kiotvietId: String,
+    kiotvietId: Number,
     endUserName: String,
     lastUpdatedGHTK: String
 

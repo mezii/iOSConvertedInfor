@@ -137,9 +137,9 @@ app.post("/updateShipment", async (req,res) => {
     console.log(order);
     if (order){
       io.sockets.emit("chat message","update");
-      res.send("Successcce");
     }
-   
+    res.send("Successcce");
+
 
 })
 
@@ -246,7 +246,10 @@ app.get("/gsheet", async(req,res) => {
   res.send(await GSheet.find({}));
 
 })
-
+app.post("/order/update",async(req,res) => {
+  const order = await Order.findOneAndUpdate({orderId: req.body.orderId},req.body)
+  res.send( order);
+})
 app.post("/order", async(req,res) => {
     const existOrder = await Order.findOne({orderId: req.body.id});
     //
@@ -290,7 +293,7 @@ app.post("/order", async(req,res) => {
         shopToken: shop.token,
         shopName: shop.name,
         note: req.body.note,
-        kiotvietId: req.body.kiotvietId ? req.body.kiotvietId : (existOrder ? existOrder.kiotvietId : null),
+        kiotvietId: req.body.kiotvietId,
         endUserName: req.body.endUserName ? req.body.endUserName : (existOrder ? existOrder.endUserName : null),
    
       }
@@ -565,6 +568,10 @@ app.post("/user", async (req,res) => {
 app.delete("/user", async (req,res) => {
  const user =  await User.deleteOne({email: req.body.email});
   res.send(user)
+})
+app.get("/user/:email", async (req,res) => {
+  res.send(await User.findOne({email: req.params.email}));
+
 })
 
 
