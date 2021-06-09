@@ -9,6 +9,7 @@ const fs = require('fs');
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
+const ejs = require('ejs');
 
 
 
@@ -44,6 +45,9 @@ app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
 // Connect db
 mongoose.connect('mongodb://localhost:27017/', {useNewUrlParser: true, useUnifiedTopology: true});
+
+
+app.set('view engine', 'ejs');
 
 //
 
@@ -294,6 +298,7 @@ app.post("/order", async(req,res) => {
         shopName: shop.name,
         note: req.body.note,
         kiotvietId: req.body.kiotvietId,
+        ghtk_id: req.body.ghtk_id,
         endUserName: req.body.endUserName ? req.body.endUserName : (existOrder ? existOrder.endUserName : null),
    
       }
@@ -547,7 +552,10 @@ app.delete('/combo/:product_code', async(req,res) => {
 app.get("/manager", async(req,res) => {
   res.sendFile(path.join(__dirname + "/views/manager.html"));
 })
-
+app.get("/page/order/:id", async(req,res) => {
+  const order = await Order.findOne({orderId: req.params.id});
+  res.render(path.join(__dirname + "/views/order"),{order: order});
+})
 
 app.post("/user", async (req,res) => {
   const existedUser =   await User.findOne({email: req.body.email});
