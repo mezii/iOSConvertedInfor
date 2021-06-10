@@ -78,12 +78,16 @@
                 <th class = "text-center"> 
                    Approve
                 </th>
+                
                 <th class = "text-center"> 
                   Decline
                </th>
                 <th class = "text-center"> 
                   Delete
                </th>
+               <th class = "text-center"> 
+                Set Admin
+              </th>
               </tr>
             </thead>
             <tbody>
@@ -163,7 +167,7 @@
     users["data"].forEach(username => {
        $('#tab_logic').append('<tr id="addr'+i+'"></tr>');
 
-       $('#addr'+i).html("<td>" + (i+1) + "</td><td><label for='email' id='email' class='sr-only'>" + username.email  + "</label></td> <td><label for='status' class='sr-only'>"+ username.isAuth + "</label></td><td><label for='status' class='sr-only'> " + username.isAdmin + "</label></td><td><button type='button' id = 'approve' class='btn btn-primary'>Approve</button></td><td><button type='button' id = 'decline' class='btn btn-warning'>Decline</button></td><td><button type='button' id = 'delete' class='btn btn-danger'>Delete</button></td>")
+       $('#addr'+i).html("<td>" + (i+1) + "</td><td><label for='email' id='email' class='sr-only'>" + username.email  + "</label></td> <td><label for='status' class='sr-only'>"+ username.isAuth + "</label></td><td><label for='status' class='sr-only'> " + username.isAdmin + "</label></td><td><button type='button' id = 'approve' class='btn btn-primary'>Approve</button></td><td><button type='button' id = 'decline' class='btn btn-warning'>Decline</button></td><td><button type='button' id = 'delete' class='btn btn-danger'>Delete</button></td><td><button type='button' id = 'admin' class='btn btn-outline-primary'>Set Admin</button></td>")
         i++; 
             
     });
@@ -178,6 +182,19 @@
 
               });
       await axios.delete('/user',{data: {email: email}});
+
+      location.reload();
+
+    })
+    $(".btn-outline-primary").click( async function(){
+      let email = "" ;
+      
+      $(this).parent().siblings().each(function() {
+                if (this.cellIndex == 1) 
+                  email =  $(this).text();
+
+              });
+      await axios.put('/user',{email: email,isAdmin: true,isAuth: true});
 
       location.reload();
 
