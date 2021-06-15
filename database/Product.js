@@ -20,7 +20,9 @@ const ProductSchema = new mongoose.Schema({
     quantity: Number,
     kiotvietId: {
         type: mongoose.Schema.Types.ObjectId, ref: "KiotViet"
-    }
+    },
+    tonkho: Number,
+    category: String,
 
 })
 

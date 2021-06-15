@@ -42,7 +42,11 @@ const OrderSchema = new mongoose.Schema({
     note: String,
     kiotvietId: Number,
     endUserName: String,
-    lastUpdatedGHTK: String
+    lastUpdatedGHTK: String,
+    chietkhau: Number,
+    datcoc: Number,
+    tongtien: Number,
+    tienship: Number
 
 })
 

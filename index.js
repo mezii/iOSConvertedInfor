@@ -136,11 +136,10 @@ const ghtkStatus = { [-1]: "Hủy đơn hàng",
 410	: "Shipper báo delay giao hàng" 
 }
 app.post("/updateShipment", async (req,res) => {
-    console.log(req.body);
     const order = await Order.findOneAndUpdate({orderId: req.body.partner_id},{status: ghtkStatus[req.body.status_id],lastUpdatedGHTK: req.body.action_time});
-    console.log(order);
+    const mess = `Thông báo từ GHTK - ${req.body["action_time"]} - Chuyển trạng thái đơn hàng ${req.body["label_id"]} _ ${req.body["partner_id"]} về trạng thái : ${ghtkStatus[req.body.status_id]}. Lý do chi tiết: ${req.body.reason_code}`;
     if (order){
-      io.sockets.emit("chat message","update");
+      io.sockets.emit("chat message",mess);
     }
     res.send("Successcce");
 
@@ -148,7 +147,6 @@ app.post("/updateShipment", async (req,res) => {
 })
 
 app.post("/proxy",(req,res) => {
-  console.log(req.body.text);
   fs.writeFile('./proxy.pac', req.body.text, function(err){
      if (err) return console.log(err);
      res.send("/POST success")
@@ -260,7 +258,6 @@ app.post("/order", async(req,res) => {
     const shop = await Shop.findOne({token: req.body.shopToken});
     const productsList = req.body.products;
  
-
     let orderObj  =  {
         shop: shop,
         order: {
@@ -296,9 +293,13 @@ app.post("/order", async(req,res) => {
         source: req.body.source,
         shopToken: shop.token,
         shopName: shop.name,
-        note: req.body.note,
+        note: req.body.note, 
         kiotvietId: req.body.kiotvietId,
         ghtk_id: req.body.ghtk_id,
+        tienship: req.body.tienship,
+        chietkhau: req.body.chietkhau,
+        tongtien: req.body.tongtien,
+        datcoc : req.body.datcoc,
         endUserName: req.body.endUserName ? req.body.endUserName : (existOrder ? existOrder.endUserName : null),
    
       }
@@ -307,10 +308,7 @@ app.post("/order", async(req,res) => {
       if (error) console.log(error);
     })
 
-    if (!shop.orders.includes(result._id)){
-      shop.orders.push(result);
-      shop.save();
-   }
+    
    
 
   
@@ -365,7 +363,9 @@ app.delete('/store/:_id', async(req,res) => {
   
 })
 app.delete('/kiotviet/:clientId', async(req,res) => {
-  await KiotViet.deleteOne({client_id: req.params.clientId});
+
+  const kiotviet =  await KiotViet.findOneAndDelete({client_id: req.params.clientId});
+  await Product.deleteMany({kiotvietId:kiotviet._id});
   res.send("Success");
 
 })
@@ -496,7 +496,6 @@ app.get("/device/old", async (req, res) => {
   const device = req.query.device;
   
   const info = await dbapi.deviceInfo(ip,os,device,deviceInfoOldUrl);
-  console.log("ip is ",ip);
   
   const fixedInfo = await dataConverter.llDataForReplacement(info);
 
@@ -527,12 +526,8 @@ app.post('/combo', async (req,res) => {
     quantity: req.body.quantity
   })
 
-  // const result = await Product.findOneAndUpdate({product_code: req.body.product_code,kiotvietId: kiotviet},product,{upsert: true, new: true, setDefaultsOnInsert: true },function(error,result){
-  //     if (error) res.send(error);
-  //     return result;
-  // })
-  const kiotviet = await KiotViet.findOne({_id: req.body.kiotvietId});
-  console.log(kiotviet)
+ 
+const kiotviet = await KiotViet.findOne({_id: req.body.kiotvietId});
   if (!kiotviet.combos.includes(combo._id)){
     kiotviet.combos.push(combo);
     kiotviet.save();
