@@ -25,6 +25,7 @@
     <script src="https://apis.google.com/js/platform.js" async defer></script>
     <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.min.js"></script>
 
 
 <meta name="theme-color" content="#7952b3">
@@ -150,7 +151,25 @@
 
 
   <footer class="my-5 pt-5 text-muted text-center text-small">
-    <p class="mb-1">&copy; 2017–2021 Company Name</p>
+    <div class="accordion" id="accordionExample">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+            Postback URL
+          </button>
+        </h2>
+        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+          <div class="accordion-body">
+            <div class="highlight"><pre class="chroma"><code class="language-html" data-lang="html"><span id="postback" class="c">!-- JS Care --</span>      
+             <!-- <div> <button class="btn btn-outline-warning" id="copyPostback">Copy</button></div> -->
+                
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <p class="mb-1">&copy; 2017–2021 JSCare</p>
     <ul class="list-inline">
       <li class="list-inline-item"><a href="#">Privacy</a></li>
       <li class="list-inline-item"><a href="#">Terms</a></li>
@@ -160,8 +179,21 @@
 </div>
 <script>
   $(document).ready( async function(){
-    $("#validemailpassword").hide();
 
+    // function handleCopyTextFromArea() {
+    //   const area = document.getElementById('postback')
+    //   area.select();
+    //   document.execCommand('copy')
+    // }
+    $("#validemailpassword").hide();                                                          
+    // $("#copyPostback").click(function(){
+    //   handleCopyTextFromArea()
+    // })
+  
+
+    const postbackUrl = window.location.origin + "/updateShipment";
+
+    $("#postback").text(postbackUrl)
     const users = await axios.get('/user');
     let i=0;
     users["data"].forEach(username => {
