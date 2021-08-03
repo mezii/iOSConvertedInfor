@@ -30,7 +30,6 @@ const OrderSchema = new mongoose.Schema({
         value: Number,
         transport: String,
         use_return_address: 0,
-<<<<<<< HEAD
 
     }, 
     status: String,
@@ -38,25 +37,6 @@ const OrderSchema = new mongoose.Schema({
     source: String,
     endUserName:String
     
-=======
-        weight_option: String,
-        hamlet: String
-    },
-    status: String,
-    date: String,
-    source: String,
-    ghtk_id: String,
-    shopToken: String,
-    shopName: String,
-    note: String,
-    kiotvietId: Number,
-    endUserName: String,
-    lastUpdatedGHTK: String,
-    chietkhau: Number,
-    datcoc: Number,
-    tongtien: Number,
-    tienship: Number
->>>>>>> c27b447220de599699b48f20e93e54ee46213a9b
 
 })
 

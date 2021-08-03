@@ -5,7 +5,6 @@ const bodyParser = require("body-parser");
 const dbapi = require("./dbapi");
 const { llData, llDataForReplacement } = require("./dataConverter");
 const dataConverter = require("./dataConverter");
-<<<<<<< HEAD
 const multer = require("multer");
 
 
@@ -21,8 +20,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage })
 
-=======
->>>>>>> c27b447220de599699b48f20e93e54ee46213a9b
 const fs = require('fs');
 const app = express();
 const http = require('http').Server(app);
@@ -41,14 +38,10 @@ const Product = require('./database/Product');
 const Source = require('./database/Source');
 const Store = require('./database/Store');
 const GSheet = require('./database/GSheet');
-<<<<<<< HEAD
-const Script = require('./database/Script');
-=======
 const Combo = require('./database/Combo');
 const User = require("./database/User");
 const KiotViet = require("./database/KiotViet");
 
->>>>>>> c27b447220de599699b48f20e93e54ee46213a9b
 
 
 var path = require('path');
@@ -313,9 +306,6 @@ app.post("/order", async(req,res) => {
         status: req.body.status,
         date: req.body.date,
         source: req.body.source,
-<<<<<<< HEAD
-        endUserName: req.body.endUserName
-=======
         shopToken: shop.token,
         shopName: shop.name,
         note: req.body.note, 
@@ -332,7 +322,6 @@ app.post("/order", async(req,res) => {
     const result = await Order.findOneAndUpdate({orderId: req.body.id},orderObj,{upsert: true, new: true, setDefaultsOnInsert: true },function(error,result){
       if (error) console.log(error);
     })
->>>>>>> c27b447220de599699b48f20e93e54ee46213a9b
 
     
    
@@ -531,7 +520,6 @@ app.get("/device/old", async (req, res) => {
 
   res.send({ ...fixedInfo });
 });
-<<<<<<< HEAD
 app.post('/script', upload.single('content'), (req, res, next) => {
     console.log(req.file);
 
@@ -554,124 +542,3 @@ app.post('/script', upload.single('content'), (req, res, next) => {
         }
     });
 });
-=======
-
-app.get('/combo', async (req,res) => {
-  res.send(await Combo.find({}).populate('products'));
-
-})
-
-app.post('/combo', async (req,res) => {
-
-  let productsArr = [];
-  const pCodes = req.body.products;
-  for (const item in pCodes){
-      productsArr.push(pCodes[item]);
-
-  }
-
-  const combo = new Combo({
-    name: req.body.name,
-    products: productsArr,
-    weight: req.body.weight,
-    price: req.body.price,
-    product_code: req.body.product_code ,
-    kiotvietId: req.body.kiotvietId,
-    quantity: req.body.quantity
-  })
-
- 
-const kiotviet = await KiotViet.findOne({_id: req.body.kiotvietId});
-  if (!kiotviet.combos.includes(combo._id)){
-    kiotviet.combos.push(combo);
-    kiotviet.save();
-  }
- 
-  combo.save();
-  res.send(combo);
-
-})
-app.delete('/combo/:product_code', async(req,res) => {
-  const combo =  await Combo.findOne({product_code: req.params.product_code});
-  await KiotViet.updateOne({"combos": combo._id},{$pull: {"combos": combo._id}});
-  res.send(await Combo.deleteOne({product_code: req.params.product_code}));
-})
-
-
-app.get("/manager", async(req,res) => {
-  res.sendFile(path.join(__dirname + "/views/manager.html"));
-})
-app.get("/page/order/:id", async(req,res) => {
-  const order = await Order.findOne({orderId: req.params.id});
-  res.render(path.join(__dirname + "/views/order"),{order: order});
-})
-
-app.post("/user", async (req,res) => {
-  const existedUser =   await User.findOne({email: req.body.email});
-  if (existedUser) return;
-  const user = {
-    email: req.body.email,
-    password: req.body.password,
-    isAuth: req.body.isAuth,
-    isAdmin: req.body.isAdmin
-  }
-   await User.create(user);
-
- 
-  res.send(user);
-
-})
-
-app.delete("/user", async (req,res) => {
- const user =  await User.deleteOne({email: req.body.email});
-  res.send(user)
-})
-app.get("/user/:email", async (req,res) => {
-  res.send(await User.findOne({email: req.params.email}));
-
-})
-
-
-app.get("/user", async (req,res) => {
-  res.send(await User.find({}));
-
-})
-
-
-app.put("/user", async (req,res) => {
-
-  const existedUser = await User.findOne({email: req.body.email});
-  const user = await User.updateOne({email:req.body.email},{password: existedUser.password,isAuth: req.body.isAuth, isAdmin: req.body.isAdmin ? true : false})
-  res.send(user);
-})
-
-app.post('/auth', async (req,res) => {
-
-   const user =  await User.findOne({email: req.body.email});
-   if (user == null){
-    res.send("Not found");
-    return;
-   }
-   if (user.password == req.body.password && user.isAuth == true){
-    res.send("true")
- 
-   } else res.send("false");
-
-   
-
-})
-
-// Kiotviet Account Schema
-//eg . sub accounts schema for kiotviet api
-
-
-io.on('connection', (socket) => {
-  socket.on('chat message', msg => {
-    io.emit('chat message', msg);
-  });
-});
-
-http.listen(PORT, () => {
-  console.log(`Luna server running at http://localhost:${PORT}/`);
-});
->>>>>>> c27b447220de599699b48f20e93e54ee46213a9b
