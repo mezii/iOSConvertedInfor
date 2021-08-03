@@ -11,16 +11,18 @@ const ProductSchema = new mongoose.Schema({
         required: true
     },
     value: Number,
-    price: {
-        type: String,
-        required: true
-    },
+    price: Number,
     weight: Number,
     height: Number,
     width: Number,
     long: Number,
-    note: String
-   
+    note: String,
+    quantity: Number,
+    kiotvietId: {
+        type: mongoose.Schema.Types.ObjectId, ref: "KiotViet"
+    },
+    tonkho: Number,
+    category: String,
 
 })
 

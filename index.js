@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const dbapi = require("./dbapi");
 const { llData, llDataForReplacement } = require("./dataConverter");
 const dataConverter = require("./dataConverter");
+<<<<<<< HEAD
 const multer = require("multer");
 
 
@@ -20,7 +21,19 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage })
 
+=======
+>>>>>>> c27b447220de599699b48f20e93e54ee46213a9b
 const fs = require('fs');
+const app = express();
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+const ejs = require('ejs');
+
+
+
+
+
+
 
 const Shop = require("./database/Shop");
 const Order = require("./database/Order");
@@ -28,24 +41,63 @@ const Product = require('./database/Product');
 const Source = require('./database/Source');
 const Store = require('./database/Store');
 const GSheet = require('./database/GSheet');
+<<<<<<< HEAD
 const Script = require('./database/Script');
+=======
+const Combo = require('./database/Combo');
+const User = require("./database/User");
+const KiotViet = require("./database/KiotViet");
+
+>>>>>>> c27b447220de599699b48f20e93e54ee46213a9b
 
 
-const app = express();
 var path = require('path');
-const { reset } = require("nodemon");
+const { RSA_NO_PADDING, EDESTADDRREQ } = require("constants");
+
+
+mongoose.set('useFindAndModify', false);
+
+
+app.use("/img", express.static('img'));
 
 const PORT = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+
 // Connect db
 mongoose.connect('mongodb://localhost:27017/', {useNewUrlParser: true, useUnifiedTopology: true});
 
-//
-app.listen(PORT, () => console.log(`Listening on ${PORT}`));
 
-app.get("/", (req, res) => {
-  res.send(`Listening on dm ${PORT} `);
+app.set('view engine', 'ejs');
+
+//
+
+const defaultKiotVietAccount = {
+  name: "Khác",
+  client_id: "askjashasjkasdhasjkadshjashja",
+  client_secret: "",
+  accounts: [],
+  products: []
+}
+
+
+
+
+
+
+
+
+
+// Pre-defined account
+KiotViet.findOneAndUpdate({client_id: "askjashasjkasdhasjkadshjashja"},defaultKiotVietAccount,{upsert: true, new: true, setDefaultsOnInsert: true },function(err,data){
+  if (err) console.log(err);
+})
+
+
+
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
 });
 
 app.get("/proxy", (req,res) => {
@@ -60,11 +112,63 @@ app.get("/proxy.pac", (req,res) => {
   res.send(data)
   });
 })
+app.post("/kiotviet/activeAccount", async(req,res) => {
+  const json =  JSON.stringify(req.body);
+  fs.writeFile("./currentKVAccount.json",json,'utf8',function(err){
+
+      if (err)
+        res.send(err);
+
+  })
+  res.send(req.body);
 
 
+})
+
+app.get("/kiotviet/activeAccount", async(req,res) => {
+  fs.readFile("./currentKVAccount.json",'utf8',function(err,data) {
+    if (err) res.send(err)
+    res.send(JSON.parse(data));
+
+  })
+
+})
+
+const ghtkStatus = { [-1]: "Hủy đơn hàng",
+1	: "Chưa tiếp nhận",
+2	:"Đã tiếp nhận",
+3	: "Đã lấy hàng/Đã nhập kho",
+4	: "Đã điều phối giao hàng/Đang giao hàng",
+5	: "Đã giao hàng/Chưa đối soát",
+6	: "Đã đối soát",
+7	: "Không lấy được hàng",
+8	: "Hoãn lấy hàng",
+9	: "Không giao được hàng",
+10	: "Delay giao hàng",
+11	: "Đã đối soát công nợ trả hàng",
+12	: "Đã điều phối lấy hàng/Đang lấy hàng",
+13	: "Đơn hàng bồi hoàn",
+20	:" Đang trả hàng (COD cầm hàng đi trả)",
+21	: "Đã trả hàng (COD đã trả xong hàng)",
+123	: "Shipper báo đã lấy hàng",
+127	: "Shipper (nhân viên lấy/giao hàng) báo không lấy được hàng",
+128	: "Shipper báo delay lấy hàng",
+45	: "Shipper báo đã giao hàng",
+49	: "Shipper báo không giao được giao hàng",
+410	: "Shipper báo delay giao hàng" 
+}
+app.post("/updateShipment", async (req,res) => {
+    const order = await Order.findOneAndUpdate({orderId: req.body.partner_id},{status: ghtkStatus[req.body.status_id],lastUpdatedGHTK: req.body.action_time});
+    const mess = `Thông báo từ GHTK - ${req.body["action_time"]} - Chuyển trạng thái đơn hàng ${req.body["label_id"]} _ ${req.body["partner_id"]} về trạng thái : ${ghtkStatus[req.body.status_id]}. Lý do chi tiết: ${req.body.reason_code}`;
+    if (order){
+      io.sockets.emit("chat message",mess);
+    }
+    res.send("Successcce");
+
+
+})
 
 app.post("/proxy",(req,res) => {
-  console.log(req.body.text);
   fs.writeFile('./proxy.pac', req.body.text, function(err){
      if (err) return console.log(err);
      res.send("/POST success")
@@ -95,9 +199,9 @@ app.get("/store/:id" , async (req,res) => {
 })
 
 app.post("/store", async (req,res) => {
-  const storeExist = Store.findOne({
+  const storeExist = Store.deleteOne({
     name: req.body.name
-  }).remove().exec();
+  })
   const store = new Store({
     name: req.body.name,
     phone: req.body.phone,
@@ -117,9 +221,37 @@ app.post("/store", async (req,res) => {
 
 })
 
+
+
 app.get("/store", async (req,res) => {
   const arr = await Store.find({});
   res.send(arr);
+
+})
+
+app.post("/kiotviet", async(req,res) => {
+   await KiotViet.deleteOne({client_id: req.body.client_id});
+  const kv = new KiotViet({
+    name: req.body.name,
+    client_id: req.body.client_id,
+    client_secret: req.body.client_secret,
+    accounts: req.body.accounts,
+    products: []
+  })
+  kv.save();
+  res.send(kv);
+
+})
+
+app.get("/kiotviet/:client_id", async (req,res) => {
+
+  res.send(await KiotViet.findOne({client_id: req.params.client_id}));
+
+})
+
+app.get("/kiotviet", async(req,res) => {
+
+  res.send(await KiotViet.find({}).populate('products').populate('combos'));
 
 })
 
@@ -138,51 +270,107 @@ app.get("/gsheet", async(req,res) => {
   res.send(await GSheet.find({}));
 
 })
-
+app.post("/order/update",async(req,res) => {
+  const order = await Order.findOneAndUpdate({orderId: req.body.orderId},req.body)
+  res.send( order);
+})
 app.post("/order", async(req,res) => {
-    // check order exist
-    await Order.deleteOne({orderId: req.body.orderId});
+    const existOrder = await Order.findOne({orderId: req.body.id});
     //
     const shop = await Shop.findOne({token: req.body.shopToken});
     const productsList = req.body.products;
-    let exportProducts = [];
-    await Promise.all(productsList.map(async product => {
-     try {
-      exportProducts.push(await Product.findOne({product_code: product.product_code}))
-     } catch (error) {
-       console.log(error);
-     }
-    }));
-    const miniOrder = req.body.order;
-    let order = null;
-  
-
-    if (shop){
-      order = new Order({
+ 
+    let orderObj  =  {
         shop: shop,
-        order: miniOrder,
-        orderId: req.body.orderId,
-        products: exportProducts,
+        order: {
+          id: req.body.id,
+          pick_name: req.body.pick_name,
+          pick_money: req.body.pick_money,
+          pick_address: req.body.pick_address,
+          pick_district: req.body.pick_district,
+          pick_province: req.body.pick_province,
+          pick_ward: req.body.pick_ward,
+          pick_tel: req.body.pick_tel,
+          pick_email: req.body.pick_email,
+          tel: req.body.tel,
+          name: req.body.name,
+          address:req.body.address,
+          province: req.body.province,
+          ward: req.body.ward,
+          district: req.body.district,
+          street: req.body.street,
+          email: req.body.email,
+          hamlet: "Khác",
+          is_freeship: req.body.is_freeship,
+          note: req.body.note,
+          value: req.body.value,
+          transport: req.body.transport,
+          weight_option: "gram"
+
+        },
+        orderId: req.body.id,
+        products: productsList,
         status: req.body.status,
         date: req.body.date,
         source: req.body.source,
+<<<<<<< HEAD
         endUserName: req.body.endUserName
+=======
+        shopToken: shop.token,
+        shopName: shop.name,
+        note: req.body.note, 
+        kiotvietId: req.body.kiotvietId,
+        ghtk_id: req.body.ghtk_id,
+        tienship: req.body.tienship,
+        chietkhau: req.body.chietkhau,
+        tongtien: req.body.tongtien,
+        datcoc : req.body.datcoc,
+        endUserName: req.body.endUserName ? req.body.endUserName : (existOrder ? existOrder.endUserName : null),
+   
+      }
+      let order ;
+    const result = await Order.findOneAndUpdate({orderId: req.body.id},orderObj,{upsert: true, new: true, setDefaultsOnInsert: true },function(error,result){
+      if (error) console.log(error);
+    })
+>>>>>>> c27b447220de599699b48f20e93e54ee46213a9b
 
-      })
-      order.save( err => console.log(err)); 
-      shop.orders.push(order);
-      shop.save();
+    
+   
 
-    }
+  
+    
+   
 
 
-  res.send(order);
+  res.send(result);
 
   
 })
+app.get('/order/deleteAll', async(req,res) => {
+  res.send(await Order.deleteMany({}));
+
+})
 app.delete('/shop/:token', async(req,res) => {
+
   await Shop.deleteOne({token: req.params.token});
   res.send("Success");
+
+})
+app.delete('/product/:product_code', async(req,res) => {
+  const product =  await Product.findOne({product_code: req.params.product_code});
+  await KiotViet.updateOne({"products": product._id},{$pull: {"products": product._id}});
+  res.send( await Product.deleteOne({product_code: req.params.product_code}));
+
+})
+
+app.get('/product/:product_code', async(req,res) => {
+ 
+  res.send( await Product.findOne({product_code: req.params.product_code}));
+
+})
+app.get('/combo/:product_code', async(req,res) => {
+ 
+  res.send( await Combo.findOne({product_code: req.params.product_code}));
 
 })
 app.get('/shop/:orderId' , async(req,res) => {
@@ -196,20 +384,24 @@ app.delete('/gsheet/:id', async(req,res) => {
 
 })
 
+app.delete('/store/:_id', async(req,res) => {
+  res.send(await Store.deleteOne({_id: req.params._id}));
+  
+})
+app.delete('/kiotviet/:clientId', async(req,res) => {
+
+  const kiotviet =  await KiotViet.findOneAndDelete({client_id: req.params.clientId});
+  await Product.deleteMany({kiotvietId:kiotviet._id});
+  res.send("Success");
+
+})
 app.get('/product', async (req,res) => {
   res.send(await Product.find({}))
 })
 
 app.post('/product', async (req,res) => {
-  if (!req.body.name || !req.body.product_code || !req.body.price || !req.body.weight){
-    res.send({
-      status: false,
-      message: "Cannot create product without either name/product_code/price/weight"
-    })
-  }
-  
-
-  const product = new Product({
+  const kiotviet = await KiotViet.findOne({_id: req.body.kiotvietId})
+  const product = {
     product_code: req.body.product_code,
     name: req.body.name,
     value: req.body.value,
@@ -218,25 +410,23 @@ app.post('/product', async (req,res) => {
     height: req.body.height,
     width: req.body.width,
     long: req.body.long,
-    note: req.body.note
+    note: req.body.note,
+    quantity: req.body.quantity,
+    kiotvietId: kiotviet
+  };
+  const result = await Product.findOneAndUpdate({product_code: req.body.product_code,kiotvietId: kiotviet},product,{upsert: true, new: true, setDefaultsOnInsert: true },function(error,result){
+      if (error) res.send(error);
+      return result;
+  })
+  if (!kiotviet.products.includes(result._id)){
+     kiotviet.products.push(result);
+     kiotviet.save();
+  }
+  
 
-  });
+  
+  res.send(result)
 
-  var existProduct = Product.findOne({
-    product_code: req.body.product_code
-  }).remove().exec();
-
- 
-  product.save(function (error) {
-    if (error){
-      console.log(error)
-      res.send({
-        status: false,
-        message: error
-      })
-    } else res.send(product)
-
-  });
 
 
 })
@@ -262,11 +452,18 @@ app.post('/source' , async (req,res) => {
 
 })
 
-// function UpdateOrderStatus(order,shopToken){
-//   const axio
-  
 
-// }
+app.get('/order/:orderId', async(req,res) => {
+    const order = await (await Order.findOne({orderId: req.params.orderId}).populate('shop').populate('products'));
+    res.send(order);
+
+})
+
+app.delete('/order/:orderId', async (req,res) => {
+  const order = await Order.findOneAndDelete({orderId: req.params.orderId});
+  await Shop.updateOne({"token": order.shopToken},{$pull: {"orders": order._id}});
+  res.send(order);
+})
 
 app.get('/shop/token/:orderId', async(req,res) => {
   const order = await Order.findOne({
@@ -275,7 +472,7 @@ app.get('/shop/token/:orderId', async(req,res) => {
   res.send(order.shop.token);
 })
 
-app.get('/order/ids', async(req,res) => {
+app.get('/order/list/ids', async(req,res) => {
   const orders = await Order.find({});
   let orderId = [];
   orders.forEach(order => {
@@ -313,7 +510,6 @@ app.get("/device/new", async (req, res) => {
   } else ip = req.query.ip;
   
   const info = await dbapi.deviceInfo(ip,os,device,deviceInfoUrl);
-  console.log("ip is ",ip);
   
   const fixedInfo = await dataConverter.llDataForReplacement(info);
 
@@ -330,12 +526,12 @@ app.get("/device/old", async (req, res) => {
   const device = req.query.device;
   
   const info = await dbapi.deviceInfo(ip,os,device,deviceInfoOldUrl);
-  console.log("ip is ",ip);
   
   const fixedInfo = await dataConverter.llDataForReplacement(info);
 
   res.send({ ...fixedInfo });
 });
+<<<<<<< HEAD
 app.post('/script', upload.single('content'), (req, res, next) => {
     console.log(req.file);
 
@@ -358,3 +554,124 @@ app.post('/script', upload.single('content'), (req, res, next) => {
         }
     });
 });
+=======
+
+app.get('/combo', async (req,res) => {
+  res.send(await Combo.find({}).populate('products'));
+
+})
+
+app.post('/combo', async (req,res) => {
+
+  let productsArr = [];
+  const pCodes = req.body.products;
+  for (const item in pCodes){
+      productsArr.push(pCodes[item]);
+
+  }
+
+  const combo = new Combo({
+    name: req.body.name,
+    products: productsArr,
+    weight: req.body.weight,
+    price: req.body.price,
+    product_code: req.body.product_code ,
+    kiotvietId: req.body.kiotvietId,
+    quantity: req.body.quantity
+  })
+
+ 
+const kiotviet = await KiotViet.findOne({_id: req.body.kiotvietId});
+  if (!kiotviet.combos.includes(combo._id)){
+    kiotviet.combos.push(combo);
+    kiotviet.save();
+  }
+ 
+  combo.save();
+  res.send(combo);
+
+})
+app.delete('/combo/:product_code', async(req,res) => {
+  const combo =  await Combo.findOne({product_code: req.params.product_code});
+  await KiotViet.updateOne({"combos": combo._id},{$pull: {"combos": combo._id}});
+  res.send(await Combo.deleteOne({product_code: req.params.product_code}));
+})
+
+
+app.get("/manager", async(req,res) => {
+  res.sendFile(path.join(__dirname + "/views/manager.html"));
+})
+app.get("/page/order/:id", async(req,res) => {
+  const order = await Order.findOne({orderId: req.params.id});
+  res.render(path.join(__dirname + "/views/order"),{order: order});
+})
+
+app.post("/user", async (req,res) => {
+  const existedUser =   await User.findOne({email: req.body.email});
+  if (existedUser) return;
+  const user = {
+    email: req.body.email,
+    password: req.body.password,
+    isAuth: req.body.isAuth,
+    isAdmin: req.body.isAdmin
+  }
+   await User.create(user);
+
+ 
+  res.send(user);
+
+})
+
+app.delete("/user", async (req,res) => {
+ const user =  await User.deleteOne({email: req.body.email});
+  res.send(user)
+})
+app.get("/user/:email", async (req,res) => {
+  res.send(await User.findOne({email: req.params.email}));
+
+})
+
+
+app.get("/user", async (req,res) => {
+  res.send(await User.find({}));
+
+})
+
+
+app.put("/user", async (req,res) => {
+
+  const existedUser = await User.findOne({email: req.body.email});
+  const user = await User.updateOne({email:req.body.email},{password: existedUser.password,isAuth: req.body.isAuth, isAdmin: req.body.isAdmin ? true : false})
+  res.send(user);
+})
+
+app.post('/auth', async (req,res) => {
+
+   const user =  await User.findOne({email: req.body.email});
+   if (user == null){
+    res.send("Not found");
+    return;
+   }
+   if (user.password == req.body.password && user.isAuth == true){
+    res.send("true")
+ 
+   } else res.send("false");
+
+   
+
+})
+
+// Kiotviet Account Schema
+//eg . sub accounts schema for kiotviet api
+
+
+io.on('connection', (socket) => {
+  socket.on('chat message', msg => {
+    io.emit('chat message', msg);
+  });
+});
+
+http.listen(PORT, () => {
+  console.log(`Luna server running at http://localhost:${PORT}/`);
+});
+>>>>>>> c27b447220de599699b48f20e93e54ee46213a9b
