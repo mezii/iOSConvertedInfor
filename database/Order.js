@@ -34,9 +34,11 @@ const OrderSchema = new mongoose.Schema({
        
         use_return_address: 0,
 
-    }, status: String,
+    }, 
+    status: String,
     date: String,
-    source: String
+    source: String,
+    endUserName:String
     
 
 })

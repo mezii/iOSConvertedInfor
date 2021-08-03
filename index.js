@@ -5,6 +5,20 @@ const bodyParser = require("body-parser");
 const dbapi = require("./dbapi");
 const { llData, llDataForReplacement } = require("./dataConverter");
 const dataConverter = require("./dataConverter");
+const multer = require("multer");
+
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads')
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.fieldname + '-' + Date.now())
+    }
+});
+
+
+const upload = multer({ storage: storage })
 
 const fs = require('fs');
 
@@ -14,7 +28,8 @@ const Product = require('./database/Product');
 const Source = require('./database/Source');
 const Store = require('./database/Store');
 const GSheet = require('./database/GSheet');
-const axios = require('axios');
+const Script = require('./database/Script');
+
 
 const app = express();
 var path = require('path');
@@ -150,7 +165,8 @@ app.post("/order", async(req,res) => {
         products: exportProducts,
         status: req.body.status,
         date: req.body.date,
-        source: req.body.source
+        source: req.body.source,
+        endUserName: req.body.endUserName
 
       })
       order.save( err => console.log(err)); 
@@ -286,12 +302,15 @@ const deviceInfoUrl = `http://139.180.128.184:9999/api/fakeinfo/`;
 const deviceInfoOldUrl = `http://139.180.128.184:9999/api/fakeinfo/oldDevice`
 
 app.get("/device/new", async (req, res) => {
-  var ip = req.headers['x-forwarded-for'] || 
+  const os = req.query.os;
+  const device = req.query.device;
+  
+  if (req.query.ip == null){
+    ip = req.headers['x-forwarded-for'] || 
      req.connection.remoteAddress || 
      req.socket.remoteAddress ||
      (req.connection.socket ? req.connection.socket.remoteAddress : null);
-  const os = req.query.os;
-  const device = req.query.device;
+  } else ip = req.query.ip;
   
   const info = await dbapi.deviceInfo(ip,os,device,deviceInfoUrl);
   console.log("ip is ",ip);
@@ -306,6 +325,7 @@ app.get("/device/old", async (req, res) => {
      req.connection.remoteAddress || 
      req.socket.remoteAddress ||
      (req.connection.socket ? req.connection.socket.remoteAddress : null);
+
   const os = req.query.os;
   const device = req.query.device;
   
@@ -315,4 +335,26 @@ app.get("/device/old", async (req, res) => {
   const fixedInfo = await dataConverter.llDataForReplacement(info);
 
   res.send({ ...fixedInfo });
+});
+app.post('/script', upload.single('content'), (req, res, next) => {
+    console.log(req.file);
+
+    var obj = {
+        name: req.body.name,
+        group: req.body.group,
+        type: req.body.type,
+        content: {
+            data: fs.readFileSync(path.join(__dirname + '/uploads/' + req.file.filename)),
+            contentType: 'text/plain'
+        }
+    }
+    Script.create(obj, (err, item) => {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            item.save();
+            res.redirect('/');
+        }
+    });
 });
