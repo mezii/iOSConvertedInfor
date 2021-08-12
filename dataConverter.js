@@ -1,10 +1,12 @@
 const fs = require("fs");
 const {iphone} = require("./iphone")
+const data =  fs.readFileSync("./data.txt", {
+  encoding: "utf8",
+  flag: "r",
+});
+
 let llData = async function getllData() {
-  const data = await fs.readFileSync("./data.txt", {
-    encoding: "utf8",
-    flag: "r",
-  });
+
   const dataArr = data.split("\n");
   return {
     ddInfo: dataArr[Math.floor(Math.random() * dataArr.length + 1)].split(
