@@ -1,6 +1,6 @@
 const axios = require("axios").default;
 
-const loginUrl = `http://139.180.128.184:9999/api/auth/signin`;
+const loginUrl = `http://45.77.253.212:9999/api/auth/signin`;
 
 
 let token = async function getToken() {
