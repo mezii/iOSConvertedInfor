@@ -80,17 +80,17 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-// app.get("/region", (req,res) => {
-//   if (!req.body.language || !req.body.iso639 || !req.body.timezone) res.send("Invalid data");
-//   const region = new Region({
-//     language: req.body.language,
-//     iso639: req.body.iso639,
-//     timezone: req.body.timezone
-//   })
-//   // await Region.deleteMany();
-//   // await region.save();
-//   res.send(region);
-// })
+app.get("/region", (req,res) => {
+  if (!req.body.language || !req.body.iso639 || !req.body.timezone) res.send("Invalid data");
+  const region = new Region({
+    language: req.body.language,
+    iso639: req.body.iso639,
+    timezone: req.body.timezone
+  })
+  await Region.deleteMany();
+  await region.save();
+  res.send(region);
+})
 
 app.get("/proxy", (req, res) => {
   res.sendFile(path.join(__dirname + '/proxy.html'));
