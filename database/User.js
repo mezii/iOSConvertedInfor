@@ -15,6 +15,6 @@ const UserSchema = new mongoose.Schema({
       type: Boolean
   },
 
-})
+}) 
 
 module.exports = mongoose.model('User',UserSchema);
