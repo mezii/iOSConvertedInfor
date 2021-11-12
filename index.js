@@ -32,7 +32,7 @@ const Region = require("./database/Region");
 
 var path = require('path');
 const { RSA_NO_PADDING, EDESTADDRREQ } = require("constants");
-const { resolveSrv } = require("dns/promises");
+// const { resolveSrv } = require("dns/promises");
 
 
 mongoose.set('useFindAndModify', false);
@@ -80,7 +80,9 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-app.get("/region",async (req,res) => {
+app.post('/region', async (req,res) => {
+  // const json = JSON.stringify(req.body);
+
   if (!req.body.language || !req.body.iso639 || !req.body.timezone) res.send("Invalid data");
   const region = new Region({
     language: req.body.language,
@@ -89,7 +91,12 @@ app.get("/region",async (req,res) => {
   })
   await Region.deleteMany();
   await region.save();
-  res.send(region);
+  res.send(region)
+})
+
+app.get("/region",async(req,res) => {
+
+  res.send(await Region.find({}) )
 })
 
 app.get("/proxy", (req, res) => {
@@ -490,19 +497,24 @@ const deviceInfoUrl = `http://139.180.128.184:9999/api/fakeinfo/`;
 const deviceInfoOldUrl = `http://139.180.128.184:9999/api/fakeinfo/oldDevice`
 
 app.get("/device/new", async (req, res) => {
-  var ip = req.query.ip;
-  if (req.query.ip == undefined){
-    ip = req.headers['x-forwarded-for'] ||
+  var ip = req.headers['x-forwarded-for'] ||
     req.connection.remoteAddress ||
     req.socket.remoteAddress ||
     (req.connection.socket ? req.connection.socket.remoteAddress : null);
-  } 
   const os = req.query.os;
   const device = req.query.device;
 
   const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
 
   const fixedInfo = await dataConverter.llDataForReplacement(info);
+  const region = await Region.findOne({});
+  if (region && fixedInfo("Timezone")){
+      fixedInfo["Timezone"]["language"] = region["language"];
+      fixedInfo["Timezone"]["iso639"] = region["iso639"];
+      fixedInfo["Timezone"]["timezoneb"] = region["timezone"];
+  }
+
+
 
   res.send({ ...fixedInfo });
 });
