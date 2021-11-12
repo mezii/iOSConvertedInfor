@@ -80,7 +80,7 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-app.get("/region", (req,res) => {
+app.get("/region",async (req,res) => {
   if (!req.body.language || !req.body.iso639 || !req.body.timezone) res.send("Invalid data");
   const region = new Region({
     language: req.body.language,
