@@ -497,10 +497,11 @@ const deviceInfoUrl = `http://139.180.128.184:9999/api/fakeinfo/`;
 const deviceInfoOldUrl = `http://139.180.128.184:9999/api/fakeinfo/oldDevice`
 
 app.get("/device/new", async (req, res) => {
-  var ip = req.headers['x-forwarded-for'] ||
-    req.connection.remoteAddress ||
-    req.socket.remoteAddress ||
-    (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  // var ip = req.headers['x-forwarded-for'] ||
+  //   req.connection.remoteAddress ||
+  //   req.socket.remoteAddress ||
+  //   (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  const ip = req.query.ip;
   const os = req.query.os;
   const device = req.query.device;
 
