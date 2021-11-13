@@ -509,7 +509,7 @@ app.get("/device/new", async (req, res) => {
 
   const fixedInfo = await dataConverter.llDataForReplacement(info);
   const region = await Region.findOne({});
-  if (region && fixedInfo["Timezone"]){
+  if (region["Timezone"]["language"] != "" && fixedInfo["Timezone"]){
       fixedInfo["Timezone"]["language"] = region["language"];
       fixedInfo["Timezone"]["iso639"] = region["iso639"];
       fixedInfo["Timezone"]["timezoneb"] = region["timezone"];
