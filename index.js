@@ -28,6 +28,7 @@ const User = require("./database/User");
 const KiotViet = require("./database/KiotViet");
 
 const Region = require("./database/Region");
+const TNAccount = require("./database/TNAccount");
 
 
 var path = require('path');
@@ -92,6 +93,25 @@ app.post('/region', async (req,res) => {
   await Region.deleteMany();
   await region.save();
   res.send(region)
+})
+
+
+
+app.post('/tnaccount', async (req,res) => {
+  // const json = JSON.stringify(req.body);
+
+  const tnaccount = new TNAccount({
+    email: req.body.email,
+    password: req.body.password,
+    clientId: req.body.clientId,
+    device: req.body.device,
+    numberPhone: req.body.numberPhone,
+    cookie: req.body.cookie,
+    username: req.body.username,
+  })
+
+  await tnaccount.save();
+  res.send(tnaccount)
 })
 
 app.get("/region",async(req,res) => {
@@ -654,3 +674,5 @@ io.on('connection', (socket) => {
 http.listen(PORT, () => {
   console.log(`Luna server running at http://localhost:${PORT}/`);
 });
+
+
