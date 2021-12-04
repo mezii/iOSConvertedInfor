@@ -29,6 +29,7 @@ const KiotViet = require("./database/KiotViet");
 
 const Region = require("./database/Region");
 const TNAccount = require("./database/TNAccount");
+const FBAccount = require("./database/FBAccount");
 
 
 var path = require('path');
@@ -112,6 +113,24 @@ app.post('/tnaccount', async (req,res) => {
 
   await tnaccount.save();
   res.send(tnaccount)
+})
+
+app.post('/fbaccount', async (req,res) => {
+
+  const fbaccount = new FBAccount({
+    uid: req.body.uid,
+    password: req.body.password,
+    cookie: req.body.cookie,
+    qrcode: req.body.qrcode,
+  })
+
+  await fbaccount.save();
+  res.send(fbaccount)
+})
+
+app.get('/fbaccount', async (req,res) => {
+  res.send(await FBAccount.find({}));
+
 })
 
 app.get("/region",async(req,res) => {
