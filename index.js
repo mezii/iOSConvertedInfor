@@ -114,7 +114,6 @@ app.post('/tnaccount', async (req,res) => {
   await tnaccount.save();
   res.send(tnaccount)
 })
-
 app.post('/fbaccount', async (req,res) => {
 
   const fbaccount = new FBAccount({
@@ -624,6 +623,17 @@ app.get("/page/order/:id", async (req, res) => {
   const order = await Order.findOne({ orderId: req.params.id });
   res.render(path.join(__dirname + "/views/order"), { order: order });
 })
+
+app.get("/fbaccount/trash", async(req, res) => {
+  
+  res.render(path.join(__dirname + "/views/fbtrash"));
+})
+
+app.get("/fbaccount/test", async(req,res) => {
+
+  res.send("test|test|datr=dNiwYbaUOBL1K7Di9M8tJmAq;c_user=100024754122286;xs=5%3A0jJOEfM-9ohMbg%3A2%3A1638977965%3A-1%3A6381;fr=0ToShEAJNDWF14asV.AWUW7TowPeBd3unVK0j2j-hH4Pc.BhsNh0.Fs.AAA.0.0.BhsNj2.AWVBnIfiy3U;oo=ss|datzz");
+})
+
 
 app.post("/user", async (req, res) => {
   const existedUser = await User.findOne({ email: req.body.email });
