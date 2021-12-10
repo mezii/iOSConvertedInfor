@@ -10,7 +10,7 @@ const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const ejs = require('ejs');
-
+const multer = require('multer');
 
 
 
@@ -30,6 +30,21 @@ const KiotViet = require("./database/KiotViet");
 const Region = require("./database/Region");
 const TNAccount = require("./database/TNAccount");
 const FBAccount = require("./database/FBAccount");
+
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './uploads/')
+  },
+  filename: function (req, file, cb) {
+
+      cb(null,  "trash.txt" );
+
+  }
+});
+
+var upload = multer({ storage: storage });
+
+
 
 
 var path = require('path');
@@ -627,6 +642,31 @@ app.get("/page/order/:id", async (req, res) => {
 app.get("/fbaccount/trash", async(req, res) => {
   
   res.render(path.join(__dirname + "/views/fbtrash"));
+})
+app.get("/fbaccount/random", async(req,res) =>{
+  const data =  await fs.readFileSync(path.join(__dirname +"/uploads/trash.txt"), {
+    encoding: "utf8",
+    flag: "r",
+  });
+  const dataArr = data.split("\n");
+  // res.setHeader('Content-Type', 'text/plain');
+
+  if (dataArr.length > 0){
+      const cookie = dataArr[Math.floor(Math.random() * dataArr.length + 1)];
+      const cookies = cookie.split('|');
+      if (cookies.length > 1) res.send(cookie);
+      else res.send("Cannot Parse Cookie");
+      
+  } else res.send("Error");
+})
+
+app.post("/fbaccount/trash", upload.single('file'), async(req,res) =>{
+  const data =  await fs.readFileSync(path.join(__dirname +"/uploads/trash.txt"), {
+    encoding: "utf8",
+    flag: "r",
+  });
+
+   res.send(data)
 })
 
 app.get("/fbaccount/test", async(req,res) => {

@@ -23,6 +23,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
         crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
 
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
@@ -59,11 +61,31 @@
        <h2>Trash Control</h2>
     </div>
     <div class="container pt-5">
-        <div class="mb-3">
-            <label for="formFile" class="form-label">Upload File to trash</label>
-            <input class="form-control" type="file" id="formFile">
+        <form id="formFile">
+            <div class="form-group">
+                <label for="formFile" class="form-label">Upload File to trash</label>
+                <input type="file" name="file" class="form-control" id="exampleFormControlFile1">
+            </div>
+        </form>
+
+        <div class="m-4"> 
+            <div class="btn-group" role="group" aria-label="Basic mixed styles example">
+                <button type="button" class="btn btn-primary">Check Live</button>
+            </div>
+            <div class="btn-group" role="group" aria-label="Basic mixed styles example">
+                <button type="button" class="btn btn-success" id="upload">Upload</button>
+            </div>
+
         </div>
     </div>
+    <div class="container pt-5"> 
+        <div class="form-group">
+            <label for="exampleFormControlTextarea1">Facebook Accounts</label>
+            <textarea class="form-control" id="fbaccounts" rows="30"></textarea>
+        </div>
+
+    </div>
+   
 
     <footer class="my-5 pt-5 text-muted text-center text-small">
         <p class="mb-1">&copy; 2017–2021 Company Name</p>
@@ -82,7 +104,22 @@
 
 <script>
 
+$("#upload").click(function(){
+    
+    var formData = new FormData($('#formFile')[0]);
 
+    $.ajax({
+        url: '/fbaccount/trash',
+        data: formData,
+        contentType: false,
+        processData: false,
+        cache: false,
+        type: 'POST',
+        success: function (data) {
+            $("#fbaccounts").val(data);
+        },
+    });
+})
 
 
 </script>
