@@ -9,6 +9,7 @@ const FBAccountSchema = new mongoose.Schema({
     uid: {
         type: String,
         required: true,
+        unique:true
     },
     password: {
         type: String,
@@ -16,7 +17,8 @@ const FBAccountSchema = new mongoose.Schema({
     },
     cookie: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     qrcode: {
         type: String
