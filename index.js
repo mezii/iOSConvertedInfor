@@ -37,7 +37,7 @@ var storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
 
-      cb(null,  "trash.txt" );
+    cb(null, "trash.txt");
 
   }
 });
@@ -97,7 +97,7 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-app.post('/region', async (req,res) => {
+app.post('/region', async (req, res) => {
   // const json = JSON.stringify(req.body);
 
   if (!req.body.language || !req.body.iso639 || !req.body.timezone) res.send("Invalid data");
@@ -113,7 +113,7 @@ app.post('/region', async (req,res) => {
 
 
 
-app.post('/tnaccount', async (req,res) => {
+app.post('/tnaccount', async (req, res) => {
   // const json = JSON.stringify(req.body);
 
   const tnaccount = new TNAccount({
@@ -129,7 +129,7 @@ app.post('/tnaccount', async (req,res) => {
   await tnaccount.save();
   res.send(tnaccount)
 })
-app.post('/fbaccount', async (req,res) => {
+app.post('/fbaccount', async (req, res) => {
 
   const fbaccount = new FBAccount({
     uid: req.body.uid,
@@ -142,14 +142,14 @@ app.post('/fbaccount', async (req,res) => {
   res.send(fbaccount)
 })
 
-app.get('/fbaccount', async (req,res) => {
+app.get('/fbaccount', async (req, res) => {
   res.send(await FBAccount.find({}));
 
 })
 
-app.get("/region",async(req,res) => {
+app.get("/region", async (req, res) => {
 
-  res.send(await Region.find({}) )
+  res.send(await Region.find({}))
 })
 
 app.get("/proxy", (req, res) => {
@@ -562,11 +562,11 @@ app.get("/device/new", async (req, res) => {
 
   const fixedInfo = await dataConverter.llDataForReplacement(info);
   const region = await Region.findOne({});
-  if (region && fixedInfo["Timezone"]){
-      
-       if (region["language"] != "") fixedInfo["Timezone"]["language"] = region["language"];
-       if (region["iso639"] != "") fixedInfo["Timezone"]["iso639"] = region["iso639"];
-       if (region["timezone"] != "") fixedInfo["Timezone"]["timezoneb"] = region["timezone"];
+  if (region && fixedInfo["Timezone"]) {
+
+    if (region["language"] != "") fixedInfo["Timezone"]["language"] = region["language"];
+    if (region["iso639"] != "") fixedInfo["Timezone"]["iso639"] = region["iso639"];
+    if (region["timezone"] != "") fixedInfo["Timezone"]["timezoneb"] = region["timezone"];
   }
 
 
@@ -638,38 +638,49 @@ app.get("/page/order/:id", async (req, res) => {
   const order = await Order.findOne({ orderId: req.params.id });
   res.render(path.join(__dirname + "/views/order"), { order: order });
 })
+app.get("/fbaccount/uid", async (req, res) => {
+  const accounts = await FBAccount.find({});
+  let data = "";
+  accounts.forEach(account => {
+    data += account.uid + "<br/>";
+  });
+  res.set('Content-Type', 'text/html');
 
-app.get("/fbaccount/trash", async(req, res) => {
-  
+
+  res.send(data);
+
+})
+app.get("/fbaccount/trash", async (req, res) => {
+
   res.render(path.join(__dirname + "/views/fbtrash"));
 })
-app.get("/fbaccount/random", async(req,res) =>{
-  const data =  await fs.readFileSync(path.join(__dirname +"/uploads/trash.txt"), {
+app.get("/fbaccount/random", async (req, res) => {
+  const data = await fs.readFileSync(path.join(__dirname + "/uploads/trash.txt"), {
     encoding: "utf8",
     flag: "r",
   });
   const dataArr = data.split("\n");
   // res.setHeader('Content-Type', 'text/plain');
 
-  if (dataArr.length > 0){
-      const cookie = dataArr[Math.floor(Math.random() * dataArr.length + 1)];
-      const cookies = cookie.split('|');
-      if (cookies.length > 1) res.send(cookie);
-      else res.send("Cannot Parse Cookie");
-      
+  if (dataArr.length > 0) {
+    const cookie = dataArr[Math.floor(Math.random() * dataArr.length + 1)];
+    const cookies = cookie.split('|');
+    if (cookies.length > 1) res.send(cookie);
+    else res.send("Cannot Parse Cookie");
+
   } else res.send("Error");
 })
 
-app.post("/fbaccount/trash", upload.single('file'), async(req,res) =>{
-  const data =  await fs.readFileSync(path.join(__dirname +"/uploads/trash.txt"), {
+app.post("/fbaccount/trash", upload.single('file'), async (req, res) => {
+  const data = await fs.readFileSync(path.join(__dirname + "/uploads/trash.txt"), {
     encoding: "utf8",
     flag: "r",
   });
 
-   res.send(data)
+  res.send(data)
 })
 
-app.get("/fbaccount/test", async(req,res) => {
+app.get("/fbaccount/test", async (req, res) => {
 
   res.send("test|test|datr=Xe2mYP5jkcmMCqaZKjVT30xx;c_user=100024754122286;xs=12%3Al0MEBj8bulGRoA%3A2%3A1638871706%3A-1%3A6381%3A%3AAcWq9FubpDai3WK44JnEtmQV4vZFzFfrfT3h5GzM0w;fr=0eZJXzr9HqeLPqzCi.AWUEvEWLkaxafXEb0EV63cOVtdY.BhseJj.dJ.AAA.0.0.BhseJj.AWVEfju8OKw;oo=ss|datzz");
 })
