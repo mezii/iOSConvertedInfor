@@ -7,7 +7,7 @@
     <meta name="description" content="">
     <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
     <meta name="generator" content="Hugo 0.82.0">
-    <title>Checkout example · Bootstrap v5.0</title>
+    <title>FB 5.0</title>
 
     <link rel="canonical" href="https://getbootstrap.com/docs/5.0/examples/checkout/">
 
@@ -26,10 +26,9 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"
             integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
-
+    <link rel="stylesheet" href="/public/css/datepicker.css" >
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-
-=
+    <script src="/public/javascript/datepicker.js"></script>
 
 
     <meta name="theme-color" content="#7952b3">
@@ -58,22 +57,42 @@
 
 <body class="bg-light">
     <div class="container">
-       <h2>Trash Control</h2>
+       <h2>FB Manager</h2>
     </div>
     <div class="container pt-5">
         <form id="formFile">
             <div class="form-group">
                 <label for="formFile" class="form-label">Upload File to trash</label>
-                <input type="file" name="file" class="form-control" id="exampleFormControlFile1">
+                <input type="file" name="file" class="form-control" id="inputFile">
             </div>
+         
         </form>
+        <div class="input-group mt-4">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Date range</span>
+            </div>
+            <input type="text" placeholder="Start date" aria-label="First name" class="form-control start-date">
+            <input type="text" placeholder="End date" aria-label="Last name" class="form-control end-date">
+        </div>
 
         <div class="m-4"> 
             <div class="btn-group" role="group" aria-label="Basic mixed styles example">
-                <button type="button" class="btn btn-primary">Check Live</button>
+                <button type="button" class="btn btn-primary" id="checklive">Tool Lọc</button>
             </div>
             <div class="btn-group" role="group" aria-label="Basic mixed styles example">
-                <button type="button" class="btn btn-success" id="upload">Upload</button>
+                <button type="button" class="btn btn-success" id="upload">Upload To Trash</button>
+            </div>
+            <div class="btn-group" role="group" aria-label="Basic mixed styles example">
+                <button type="button" class="btn btn-warning" id="rawuid">Raw UID</button>
+            </div>
+            <div class="btn-group" role="group" aria-label="Basic mixed styles example">
+                <button type="button" class="btn btn-info" id="rawfull">Raw UID|PASS|COOKIE|2FA</button>
+            </div>
+            <div class="btn-group" role="group" aria-label="Basic mixed styles example">
+                <button type="button" class="btn btn-light" id="rawexported">Raw Exported Account</button>
+            </div>
+            <div class="btn-group" role="group" aria-label="Basic mixed styles example">
+                <button type="button" class="btn btn-dark" id="rawunexported">Raw Unexported Account</button>
             </div>
 
         </div>
@@ -104,10 +123,41 @@
 
 <script>
 
+
+const host =  window.location.origin; 
+
+        var $startDate = $('.start-date');
+        var $endDate = $('.end-date');
+
+        $startDate.datepicker({
+            autoHide: true,
+        });
+        $endDate.datepicker({
+            autoHide: true,
+            startDate: $startDate.datepicker('getDate'),
+        });
+
+        $startDate.on('change', function () {
+            $endDate.datepicker('setStartDate', $startDate.datepicker('getDate'));
+        });
+
+$("#checklive").click(function(){
+   
+    
+
+    var URL = "http://nt.hopto.me/kop/";
+    var win = window.open(URL);
+    
+})
+
 $("#upload").click(function(){
     
     var formData = new FormData($('#formFile')[0]);
-
+    var fileName = formData.getAll("file")[0].name;
+    if (fileName == "") {
+        alert("Import file before do any action !!!");
+        return;
+    }
     $.ajax({
         url: '/fbaccount/trash',
         data: formData,
@@ -120,8 +170,30 @@ $("#upload").click(function(){
         },
     });
 })
-
-
+$("#rawuid").click(function(){
+        const startDate = $startDate.datepicker('getDate',true);
+        const endDate = $endDate.datepicker('getDate',true);
+        const url = host + "/fbaccount/uid/raw?startDate=" + startDate + "&endDate=" + endDate;
+        window.open(url);
+})
+$("#rawfull").click(function () {
+        const startDate = $startDate.datepicker('getDate', true);
+        const endDate = $endDate.datepicker('getDate', true);
+        const url = host + "/fbaccount/data/raw?startDate=" + startDate + "&endDate=" + endDate;
+        window.open(url);
+})
+$("#rawexported").click(function () {
+        const startDate = $startDate.datepicker('getDate', true);
+        const endDate = $endDate.datepicker('getDate', true);
+        const url = host + "/fbaccount/data/raw?isExported=true&startDate="  + startDate + "&endDate=" + endDate;
+        window.open(url);
+})
+$("#rawunexported").click(function () {
+        const startDate = $startDate.datepicker('getDate', true);
+        const endDate = $endDate.datepicker('getDate', true);
+        const url = host + "/fbaccount/data/raw?isExported=false&startDate=" +  startDate + "&endDate=" + endDate;
+        window.open(url);
+})
 </script>
 
 </html>

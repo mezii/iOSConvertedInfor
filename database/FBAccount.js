@@ -9,7 +9,6 @@ const FBAccountSchema = new mongoose.Schema({
     uid: {
         type: String,
         required: true,
-        unique:true
     },
     password: {
         type: String,
@@ -18,12 +17,27 @@ const FBAccountSchema = new mongoose.Schema({
     cookie: {
         type: String,
         required: true,
-        unique: true
     },
     qrcode: {
         type: String
+    },
+    isExported:{
+        type: Boolean,
+        default: false
+    },
+    status:{
+        type: String,
+        default: "_",
+        required: true
+    },
+    lastUpdated:{
+        type: Date,
+        default: new Date()
+    },
+    created:{
+        type: Date, 
+        default: new Date()
     }
-   
 
 })
 

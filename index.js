@@ -54,6 +54,7 @@ const { RSA_NO_PADDING, EDESTADDRREQ } = require("constants");
 
 mongoose.set('useFindAndModify', false);
 
+app.use("/public", express.static('public'))
 
 app.use("/img", express.static('img'));
 
@@ -638,8 +639,23 @@ app.get("/page/order/:id", async (req, res) => {
   const order = await Order.findOne({ orderId: req.params.id });
   res.render(path.join(__dirname + "/views/order"), { order: order });
 })
-app.get("/fbaccount/uid", async (req, res) => {
-  const accounts = await FBAccount.find({});
+app.get("/fbaccount/uid/raw", async (req, res) => {
+  let body = req.query;
+  let search  = {};
+  if(body.startDate && body.endDate){
+    const startDate = new Date(body.startDate);
+    const endDate = new Date(body.endDate);
+    search = {
+      created: {
+        $gte: startDate,
+        $lt: endDate
+      }
+    }
+  }
+  if (body.uid) search.uid = body.uid;
+  if (body.isExported) search.isExported = body.isExported;
+  if (body.status) search.status = body.status;
+  const accounts = await FBAccount.find(search);
   let data = "";
   accounts.forEach(account => {
     data += account.uid + "<br/>";
@@ -650,6 +666,58 @@ app.get("/fbaccount/uid", async (req, res) => {
   res.send(data);
 
 })
+
+
+app.get("/fbaccount/data", async(req,res) => {
+ let body = req.query;
+ let search = {}
+  if(body.startDate && body.endDate){
+    const startDate = new Date(body.startDate);
+    const endDate = new Date(body.endDate);
+    search = {
+      created: {
+        $gte: startDate,
+        $lt: endDate
+      }
+    }
+  }
+
+  if (body.uid) search["uid"] = body.uid;
+  if (body.isExported) search["isExported"] = body.isExported;
+  if (body.status) search["status"] = body.status;
+  const accounts = await FBAccount.find(search);
+  res.send(accounts);
+
+})
+app.get("/fbaccount/data/raw", async(req,res) =>{
+
+  let body = req.query;
+  let search = {}
+  if(body.startDate && body.endDate){
+    const startDate = new Date(body.startDate);
+    const endDate = new Date(body.endDate);
+    search = {
+      created: {
+        $gte: startDate,
+        $lt: endDate
+      }
+    }
+  }
+
+  if (body.uid) search["uid"] = body.uid;
+  if (body.isExported) search["isExported"] = body.isExported;
+  if (body.status) search["status"] = body.status;
+  const accounts = await FBAccount.find(search);
+
+  let data = "";
+  accounts.forEach(account => {
+      data += account.uid + "|" + account.password + "|" + account.cookie + "|" + account.uid + "<br/>";
+  })
+
+  res.set('Content-Type', 'text/html');
+  res.send(data);
+})
+
 app.get("/fbaccount/trash", async (req, res) => {
 
   res.render(path.join(__dirname + "/views/fbtrash"));
@@ -676,7 +744,6 @@ app.post("/fbaccount/trash", upload.single('file'), async (req, res) => {
     encoding: "utf8",
     flag: "r",
   });
-
   res.send(data)
 })
 
