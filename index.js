@@ -1,55 +1,77 @@
 const express = require("express");
-const fakeSetting = require("./dataConverter");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const dbapi = require("./dbapi");
-const { llData, llDataForReplacement } = require("./dataConverter");
 const dataConverter = require("./dataConverter");
 const fs = require('fs');
 const app = express();
 const http = require('http').Server(app);
-const io = require('socket.io')(http);
-const ejs = require('ejs');
-const multer = require('multer');
+const io = require('socket.io')(http,{serverClient:true});
+const socketRoute = require('./routes/socket');
+const fbRoute = require('./routes/fbaccount');
+const userRoute = require('./routes/user');
+const mdeviceRoute = require('./routes/mdevice');
+var cookieParser = require('cookie-parser');
 
-
-
-
-
-
-const Shop = require("./database/Shop");
-const Order = require("./database/Order");
-const Product = require('./database/Product');
-const Source = require('./database/Source');
-const Store = require('./database/Store');
-const GSheet = require('./database/GSheet');
-const Combo = require('./database/Combo');
-const User = require("./database/User");
-const KiotViet = require("./database/KiotViet");
+// databased route
 
 const Region = require("./database/Region");
 const TNAccount = require("./database/TNAccount");
-const FBAccount = require("./database/FBAccount");
 
-var storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, './uploads/')
-  },
-  filename: function (req, file, cb) {
+// Include Nodejs' net module.
+const Net = require('net');
+// The port on which the server is listening.
+const port = 7777;
 
-    cb(null, "trash.txt");
 
-  }
+const server = new Net.createServer(function(socket) {
+	socket.write('Echo server\r\n');
+	socket.pipe(socket);
 });
 
-var upload = multer({ storage: storage });
+server.listen(port, function() {
+    console.log(`Server listening for connection requests on socket localhost:${port}`);
+});
+
+const sockets = [];
+
+// When a client requests a connection with the server, the server creates a new
+// socket dedicated to that client.
+server.on('connection', function(socket) {
+    sockets.push(socket);
+    socket.pipe(socket);
+
+    console.log('A new connection has been established.');
+
+    // Now that a TCP connection has been established, the server can send data to
+    // the client by writing to its socket.
+    socket.write('Welcome \n');
+
+    // The server can also receive data from the client by reading from its socket.
+    socket.on('data', function(chunk) {
+        console.log(`Data received from client: ${chunk.toString()}`);
+    });
+
+    // When the client requests to end the TCP connection with the server, the server
+    // ends the connection.
+    socket.on('end', function() {
+        console.log('Closing connection with the client');
+    });
+
+    // Don't forget to catch error, for your own sake.
+    socket.on('error', function(err) {
+        console.log(`Error: ${err}`);
+    });
+    // socket.on('disconnect', function(){
+    //   const i = sockets.indexOf(socket);
+    //   console.log(`Socket ${i} is disconnected`);
+    // })
+});
 
 
 
 
 var path = require('path');
-const { RSA_NO_PADDING, EDESTADDRREQ } = require("constants");
-// const { resolveSrv } = require("dns/promises");
 
 
 mongoose.set('useFindAndModify', false);
@@ -58,10 +80,18 @@ app.use("/public", express.static('public'))
 
 app.use("/img", express.static('img'));
 
+
 const PORT = process.env.PORT || 5000;
+app.use(cookieParser());
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+
+
+app.use("/socket", socketRoute)
+app.use("/fbaccount",fbRoute)
+app.use("/user", userRoute);
+app.use("/mdevice",mdeviceRoute);
 
 // Connect db
 mongoose.connect('mongodb://localhost:27017/', { useNewUrlParser: true, useUnifiedTopology: true });
@@ -69,30 +99,14 @@ mongoose.connect('mongodb://localhost:27017/', { useNewUrlParser: true, useUnifi
 
 app.set('view engine', 'ejs');
 
-//
+app.set('views', path.join(__dirname, 'views'));
 
-const defaultKiotVietAccount = {
-  name: "Khác",
-  client_id: "askjashasjkasdhasjkadshjashja",
-  client_secret: "",
-  accounts: [],
-  products: []
-}
-
-
-
-
-
-
-
-
-
-// Pre-defined account
-KiotViet.findOneAndUpdate({ client_id: "askjashasjkasdhasjkadshjashja" }, defaultKiotVietAccount, { upsert: true, new: true, setDefaultsOnInsert: true }, function (err, data) {
-  if (err) console.log(err);
+app.get('/testsocket', (req,res) => {
+  sockets.forEach(socket => {
+    socket.write("No WelCome");
+  });
+  res.send({"connectionCounts": sockets.length})
 })
-
-
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
@@ -130,23 +144,6 @@ app.post('/tnaccount', async (req, res) => {
   await tnaccount.save();
   res.send(tnaccount)
 })
-app.post('/fbaccount', async (req, res) => {
-
-  const fbaccount = new FBAccount({
-    uid: req.body.uid,
-    password: req.body.password,
-    cookie: req.body.cookie,
-    qrcode: req.body.qrcode,
-  })
-
-  await fbaccount.save();
-  res.send(fbaccount)
-})
-
-app.get('/fbaccount', async (req, res) => {
-  res.send(await FBAccount.find({}));
-
-})
 
 app.get("/region", async (req, res) => {
 
@@ -165,62 +162,7 @@ app.get("/proxy.pac", (req, res) => {
     res.send(data)
   });
 })
-app.post("/kiotviet/activeAccount", async (req, res) => {
-  const json = JSON.stringify(req.body);
-  fs.writeFile("./currentKVAccount.json", json, 'utf8', function (err) {
 
-    if (err)
-      res.send(err);
-
-  })
-  res.send(req.body);
-
-
-})
-
-app.get("/kiotviet/activeAccount", async (req, res) => {
-  fs.readFile("./currentKVAccount.json", 'utf8', function (err, data) {
-    if (err) res.send(err)
-    res.send(JSON.parse(data));
-
-  })
-
-})
-
-const ghtkStatus = {
-  [-1]: "Hủy đơn hàng",
-  1: "Chưa tiếp nhận",
-  2: "Đã tiếp nhận",
-  3: "Đã lấy hàng/Đã nhập kho",
-  4: "Đã điều phối giao hàng/Đang giao hàng",
-  5: "Đã giao hàng/Chưa đối soát",
-  6: "Đã đối soát",
-  7: "Không lấy được hàng",
-  8: "Hoãn lấy hàng",
-  9: "Không giao được hàng",
-  10: "Delay giao hàng",
-  11: "Đã đối soát công nợ trả hàng",
-  12: "Đã điều phối lấy hàng/Đang lấy hàng",
-  13: "Đơn hàng bồi hoàn",
-  20: " Đang trả hàng (COD cầm hàng đi trả)",
-  21: "Đã trả hàng (COD đã trả xong hàng)",
-  123: "Shipper báo đã lấy hàng",
-  127: "Shipper (nhân viên lấy/giao hàng) báo không lấy được hàng",
-  128: "Shipper báo delay lấy hàng",
-  45: "Shipper báo đã giao hàng",
-  49: "Shipper báo không giao được giao hàng",
-  410: "Shipper báo delay giao hàng"
-}
-app.post("/updateShipment", async (req, res) => {
-  const order = await Order.findOneAndUpdate({ orderId: req.body.partner_id }, { status: ghtkStatus[req.body.status_id], lastUpdatedGHTK: req.body.action_time });
-  const mess = `Thông báo từ GHTK - ${req.body["action_time"]} - Chuyển trạng thái đơn hàng ${req.body["label_id"]} _ ${req.body["partner_id"]} về trạng thái : ${ghtkStatus[req.body.status_id]}. Lý do chi tiết: ${req.body.reason_code}`;
-  if (order) {
-    io.sockets.emit("chat message", mess);
-  }
-  res.send("Successcce");
-
-
-})
 
 app.post("/proxy", (req, res) => {
   fs.writeFile('./proxy.pac', req.body.text, function (err) {
@@ -230,311 +172,6 @@ app.post("/proxy", (req, res) => {
 
 })
 
-app.post("/shop", async (req, res) => {
-  const shop = new Shop({
-    name: req.body.name,
-    token: req.body.token,
-    orders: []
-
-  })
-  shop.save(err => console.log(err));
-  res.send(shop);
-
-})
-app.get("/shop", async (req, res) => {
-  const arr = await Shop.find({});
-  res.send(arr);
-
-})
-app.get("/store/:id", async (req, res) => {
-
-  res.send(await Store.findById({ _id: req.params.id }));
-
-})
-
-app.post("/store", async (req, res) => {
-  const storeExist = Store.deleteOne({
-    name: req.body.name
-  })
-  const store = new Store({
-    name: req.body.name,
-    phone: req.body.phone,
-    email: req.body.email,
-    repName: req.body.reqName,
-    date: req.body.date,
-    source: req.body.source,
-    address: req.body.address,
-    province: req.body.province,
-    district: req.body.district,
-    ward: req.body.ward
-
-
-  })
-  store.save(err => console.log(err));
-  res.send(store);
-
-})
-
-
-
-app.get("/store", async (req, res) => {
-  const arr = await Store.find({});
-  res.send(arr);
-
-})
-
-app.post("/kiotviet", async (req, res) => {
-  await KiotViet.deleteOne({ client_id: req.body.client_id });
-  const kv = new KiotViet({
-    name: req.body.name,
-    client_id: req.body.client_id,
-    client_secret: req.body.client_secret,
-    accounts: req.body.accounts,
-    products: []
-  })
-  kv.save();
-  res.send(kv);
-
-})
-
-app.get("/kiotviet/:client_id", async (req, res) => {
-
-  res.send(await KiotViet.findOne({ client_id: req.params.client_id }));
-
-})
-
-app.get("/kiotviet", async (req, res) => {
-
-  res.send(await KiotViet.find({}).populate('products').populate('combos'));
-
-})
-
-app.post("/gsheet", async (req, res) => {
-  const sheet = new GSheet({
-    name: req.body.sheetName,
-    id: req.body.sheetId
-
-  })
-  sheet.save();
-  res.send(sheet);
-
-})
-
-app.get("/gsheet", async (req, res) => {
-  res.send(await GSheet.find({}));
-
-})
-app.post("/order/update", async (req, res) => {
-  const order = await Order.findOneAndUpdate({ orderId: req.body.orderId }, req.body)
-  res.send(order);
-})
-app.post("/order", async (req, res) => {
-  const existOrder = await Order.findOne({ orderId: req.body.id });
-  //
-  const shop = await Shop.findOne({ token: req.body.shopToken });
-  const productsList = req.body.products;
-
-  let orderObj = {
-    shop: shop,
-    order: {
-      id: req.body.id,
-      pick_name: req.body.pick_name,
-      pick_money: req.body.pick_money,
-      pick_address: req.body.pick_address,
-      pick_district: req.body.pick_district,
-      pick_province: req.body.pick_province,
-      pick_ward: req.body.pick_ward,
-      pick_tel: req.body.pick_tel,
-      pick_email: req.body.pick_email,
-      tel: req.body.tel,
-      name: req.body.name,
-      address: req.body.address,
-      province: req.body.province,
-      ward: req.body.ward,
-      district: req.body.district,
-      street: req.body.street,
-      email: req.body.email,
-      hamlet: "Khác",
-      is_freeship: req.body.is_freeship,
-      note: req.body.note,
-      value: req.body.value,
-      transport: req.body.transport,
-      weight_option: "gram"
-
-    },
-    orderId: req.body.id,
-    products: productsList,
-    status: req.body.status,
-    date: req.body.date,
-    source: req.body.source,
-    shopToken: shop.token,
-    shopName: shop.name,
-    note: req.body.note,
-    kiotvietId: req.body.kiotvietId,
-    ghtk_id: req.body.ghtk_id,
-    tienship: req.body.tienship,
-    chietkhau: req.body.chietkhau,
-    tongtien: req.body.tongtien,
-    datcoc: req.body.datcoc,
-    endUserName: req.body.endUserName ? req.body.endUserName : (existOrder ? existOrder.endUserName : null),
-
-  }
-  let order;
-  const result = await Order.findOneAndUpdate({ orderId: req.body.id }, orderObj, { upsert: true, new: true, setDefaultsOnInsert: true }, function (error, result) {
-    if (error) console.log(error);
-  })
-
-
-
-
-
-
-
-
-
-  res.send(result);
-
-
-})
-app.get('/order/deleteAll', async (req, res) => {
-  res.send(await Order.deleteMany({}));
-
-})
-app.delete('/shop/:token', async (req, res) => {
-
-  await Shop.deleteOne({ token: req.params.token });
-  res.send("Success");
-
-})
-app.delete('/product/:product_code', async (req, res) => {
-  const product = await Product.findOne({ product_code: req.params.product_code });
-  await KiotViet.updateOne({ "products": product._id }, { $pull: { "products": product._id } });
-  res.send(await Product.deleteOne({ product_code: req.params.product_code }));
-
-})
-
-app.get('/product/:product_code', async (req, res) => {
-
-  res.send(await Product.findOne({ product_code: req.params.product_code }));
-
-})
-app.get('/combo/:product_code', async (req, res) => {
-
-  res.send(await Combo.findOne({ product_code: req.params.product_code }));
-
-})
-app.get('/shop/:orderId', async (req, res) => {
-
-  const order = await Order.findOne({ orderId: req.params.orderId }).populate('shop');
-  res.send({ token: order.shop.token });
-})
-app.delete('/gsheet/:id', async (req, res) => {
-  await GSheet.deleteOne({ id: req.params.id });
-  res.send("Success");
-
-})
-
-app.delete('/store/:_id', async (req, res) => {
-  res.send(await Store.deleteOne({ _id: req.params._id }));
-
-})
-app.delete('/kiotviet/:clientId', async (req, res) => {
-
-  const kiotviet = await KiotViet.findOneAndDelete({ client_id: req.params.clientId });
-  await Product.deleteMany({ kiotvietId: kiotviet._id });
-  res.send("Success");
-
-})
-app.get('/product', async (req, res) => {
-  res.send(await Product.find({}))
-})
-
-app.post('/product', async (req, res) => {
-  const kiotviet = await KiotViet.findOne({ _id: req.body.kiotvietId })
-  const product = {
-    product_code: req.body.product_code,
-    name: req.body.name,
-    value: req.body.value,
-    price: req.body.price,
-    weight: req.body.weight,
-    height: req.body.height,
-    width: req.body.width,
-    long: req.body.long,
-    note: req.body.note,
-    quantity: req.body.quantity,
-    kiotvietId: kiotviet
-  };
-  const result = await Product.findOneAndUpdate({ product_code: req.body.product_code, kiotvietId: kiotviet }, product, { upsert: true, new: true, setDefaultsOnInsert: true }, function (error, result) {
-    if (error) res.send(error);
-    return result;
-  })
-  if (!kiotviet.products.includes(result._id)) {
-    kiotviet.products.push(result);
-    kiotviet.save();
-  }
-
-
-
-  res.send(result)
-
-
-
-})
-
-app.get('/source', async (req, res) => {
-  res.send(await Source.find({}));
-
-})
-
-app.post('/source', async (req, res) => {
-
-  const existSource = Source.findOne({
-    name: req.body.name
-  }).remove().exec();
-  const source = new Source({
-    name: req.body.name,
-    source: req.body.source
-
-  })
-  source.save(error => console.log(error));
-  res.send(source);
-
-
-})
-
-
-app.get('/order/:orderId', async (req, res) => {
-  const order = await (await Order.findOne({ orderId: req.params.orderId }).populate('shop').populate('products'));
-  res.send(order);
-
-})
-
-app.delete('/order/:orderId', async (req, res) => {
-  const order = await Order.findOneAndDelete({ orderId: req.params.orderId });
-  await Shop.updateOne({ "token": order.shopToken }, { $pull: { "orders": order._id } });
-  res.send(order);
-})
-
-app.get('/shop/token/:orderId', async (req, res) => {
-  const order = await Order.findOne({
-    orderId: req.params.orderId
-  }).populate('shop');
-  res.send(order.shop.token);
-})
-
-app.get('/order/list/ids', async (req, res) => {
-  const orders = await Order.find({});
-  let orderId = [];
-  orders.forEach(order => {
-    orderId.push(order.orderId);
-  });
-  res.send(orderId);
-
-})
-app.get('/order', async (req, res) => {
-  res.send(await Order.find({}).populate('products').populate('shop'));
-
-})
 app.get('/device/register', async (req, res) => {
   const zz = new Device({
     deviceToken: "123",
@@ -590,232 +227,18 @@ app.get("/device/old", async (req, res) => {
   res.send({ ...fixedInfo });
 });
 
-app.get('/combo', async (req, res) => {
-  res.send(await Combo.find({}).populate('products'));
-
-})
-
-app.post('/combo', async (req, res) => {
-
-  let productsArr = [];
-  const pCodes = req.body.products;
-  for (const item in pCodes) {
-    productsArr.push(pCodes[item]);
-
-  }
-
-  const combo = new Combo({
-    name: req.body.name,
-    products: productsArr,
-    weight: req.body.weight,
-    price: req.body.price,
-    product_code: req.body.product_code,
-    kiotvietId: req.body.kiotvietId,
-    quantity: req.body.quantity
-  })
-
-
-  const kiotviet = await KiotViet.findOne({ _id: req.body.kiotvietId });
-  if (!kiotviet.combos.includes(combo._id)) {
-    kiotviet.combos.push(combo);
-    kiotviet.save();
-  }
-
-  combo.save();
-  res.send(combo);
-
-})
-app.delete('/combo/:product_code', async (req, res) => {
-  const combo = await Combo.findOne({ product_code: req.params.product_code });
-  await KiotViet.updateOne({ "combos": combo._id }, { $pull: { "combos": combo._id } });
-  res.send(await Combo.deleteOne({ product_code: req.params.product_code }));
-})
-
-
 app.get("/manager", async (req, res) => {
   res.sendFile(path.join(__dirname + "/views/manager.html"));
 })
-app.get("/page/order/:id", async (req, res) => {
-  const order = await Order.findOne({ orderId: req.params.id });
-  res.render(path.join(__dirname + "/views/order"), { order: order });
-})
-app.get("/fbaccount/uid/raw", async (req, res) => {
-  let body = req.query;
-  let search  = {};
-  if(body.startDate && body.endDate){
-    const startDate = new Date(body.startDate);
-    const endDate = new Date(body.endDate);
-    search = {
-      created: {
-        $gte: startDate,
-        $lt: endDate
-      }
-    }
-  }
-  if (body.uid) search.uid = body.uid;
-  if (body.isExported) search.isExported = body.isExported;
-  if (body.status) search.status = body.status;
-  const accounts = await FBAccount.find(search);
-  let data = "";
-  accounts.forEach(account => {
-    data += account.uid + "<br/>";
-  });
-  res.set('Content-Type', 'text/html');
 
 
-  res.send(data);
-
-})
-
-
-app.get("/fbaccount/data", async(req,res) => {
- let body = req.query;
- let search = {}
-  if(body.startDate && body.endDate){
-    const startDate = new Date(body.startDate);
-    const endDate = new Date(body.endDate);
-    search = {
-      created: {
-        $gte: startDate,
-        $lt: endDate
-      }
-    }
-  }
-
-  if (body.uid) search["uid"] = body.uid;
-  if (body.isExported) search["isExported"] = body.isExported;
-  if (body.status) search["status"] = body.status;
-  const accounts = await FBAccount.find(search);
-  res.send(accounts);
-
-})
-app.get("/fbaccount/data/raw", async(req,res) =>{
-
-  let body = req.query;
-  let search = {}
-  if(body.startDate && body.endDate){
-    const startDate = new Date(body.startDate);
-    const endDate = new Date(body.endDate);
-    search = {
-      created: {
-        $gte: startDate,
-        $lt: endDate
-      }
-    }
-  }
-
-  if (body.uid) search["uid"] = body.uid;
-  if (body.isExported) search["isExported"] = body.isExported;
-  if (body.status) search["status"] = body.status;
-  const accounts = await FBAccount.find(search);
-
-  let data = "";
-  accounts.forEach(account => {
-      data += account.uid + "|" + account.password + "|" + account.cookie + "|" + account.uid + "<br/>";
-  })
-
-  res.set('Content-Type', 'text/html');
-  res.send(data);
-})
-
-app.get("/fbaccount/trash", async (req, res) => {
-
-  res.render(path.join(__dirname + "/views/fbtrash"));
-})
-app.get("/fbaccount/random", async (req, res) => {
-  const data = await fs.readFileSync(path.join(__dirname + "/uploads/trash.txt"), {
-    encoding: "utf8",
-    flag: "r",
-  });
-  const dataArr = data.split("\n");
-  // res.setHeader('Content-Type', 'text/plain');
-
-  if (dataArr.length > 0) {
-    const cookie = dataArr[Math.floor(Math.random() * dataArr.length + 1)];
-    const cookies = cookie.split('|');
-    if (cookies.length > 1) res.send(cookie);
-    else res.send("Cannot Parse Cookie");
-
-  } else res.send("Error");
-})
-
-app.post("/fbaccount/trash", upload.single('file'), async (req, res) => {
-  const data = await fs.readFileSync(path.join(__dirname + "/uploads/trash.txt"), {
-    encoding: "utf8",
-    flag: "r",
-  });
-  res.send(data)
-})
-
-app.get("/fbaccount/test", async (req, res) => {
-
-  res.send("test|test|datr=Xe2mYP5jkcmMCqaZKjVT30xx;c_user=100024754122286;xs=12%3Al0MEBj8bulGRoA%3A2%3A1638871706%3A-1%3A6381%3A%3AAcWq9FubpDai3WK44JnEtmQV4vZFzFfrfT3h5GzM0w;fr=0eZJXzr9HqeLPqzCi.AWUEvEWLkaxafXEb0EV63cOVtdY.BhseJj.dJ.AAA.0.0.BhseJj.AWVEfju8OKw;oo=ss|datzz");
-})
-
-
-app.post("/user", async (req, res) => {
-  const existedUser = await User.findOne({ email: req.body.email });
-  if (existedUser) return;
-  const user = {
-    email: req.body.email,
-    password: req.body.password,
-    isAuth: req.body.isAuth,
-    isAdmin: req.body.isAdmin
-  }
-  await User.create(user);
-
-
-  res.send(user);
-
-})
-
-app.delete("/user", async (req, res) => {
-  const user = await User.deleteOne({ email: req.body.email });
-  res.send(user)
-})
-app.get("/user/:email", async (req, res) => {
-  res.send(await User.findOne({ email: req.params.email }));
-
-})
-
-
-app.get("/user", async (req, res) => {
-  res.send(await User.find({}));
-
-})
-
-
-app.put("/user", async (req, res) => {
-
-  const existedUser = await User.findOne({ email: req.body.email });
-  const user = await User.updateOne({ email: req.body.email }, { password: existedUser.password, isAuth: req.body.isAuth, isAdmin: req.body.isAdmin ? true : false })
-  res.send(user);
-})
-
-app.post('/auth', async (req, res) => {
-
-  const user = await User.findOne({ email: req.body.email });
-  if (user == null) {
-    res.send("Not found");
-    return;
-  }
-  if (user.password == req.body.password && user.isAuth == true) {
-    res.send("true")
-
-  } else res.send("false");
-
-
-
-})
-
-// Kiotviet Account Schema
-//eg . sub accounts schema for kiotviet api
 
 
 io.on('connection', (socket) => {
-  socket.on('chat message', msg => {
-    io.emit('chat message', msg);
-  });
+  // socket.on('chat message', msg => {
+  //   io.emit('chat message', msg);
+  // });
+  console.log("a user connected");
 });
 
 http.listen(PORT, () => {

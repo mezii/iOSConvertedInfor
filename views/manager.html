@@ -160,7 +160,7 @@
         </h2>
         <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
           <div class="accordion-body">
-            <div class="highlight"><pre class="chroma"><code class="language-html" data-lang="html"><span id="postback" class="c">!-- JS Care --</span>      
+            <div class="highlight"><pre class="chroma"><code class="language-html" data-lang="html"><span id="postback" class="c">!-- Mins --</span>      
              <!-- <div> <button class="btn btn-outline-warning" id="copyPostback">Copy</button></div> -->
                 
             </div>
@@ -169,7 +169,7 @@
       </div>
 
     </div>
-    <p class="mb-1">&copy; 2017–2021 JSCare</p>
+    <p class="mb-1">&copy; 2017–2021 Mins</p>
     <ul class="list-inline">
       <li class="list-inline-item"><a href="#">Privacy</a></li>
       <li class="list-inline-item"><a href="#">Terms</a></li>
@@ -191,9 +191,9 @@
     // })
   
 
-    const postbackUrl = window.location.origin + "/updateShipment";
+    // const postbackUrl = window.location.origin + "/updateShipment";
 
-    $("#postback").text(postbackUrl)
+    // $("#postback").text(postbackUrl)
     const users = await axios.get('/user');
     let i=0;
     users["data"].forEach(username => {
