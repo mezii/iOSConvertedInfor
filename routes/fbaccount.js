@@ -10,7 +10,7 @@ router = express.Router();
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, './uploads/')
+    cb(null, './routes/uploads/')
   },
   filename: function (req, file, cb) {
 
@@ -140,6 +140,7 @@ router.get("/random", async (req, res) => {
 })
 
 router.post("/trash", upload.single('file'), async (req, res) => {
+  console.log(path.join(__dirname,"/uploads/trash.txt"))
   const data = await fs.readFileSync(path.join(__dirname + "/uploads/trash.txt"), {
     encoding: "utf8",
     flag: "r",
