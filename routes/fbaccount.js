@@ -123,8 +123,9 @@ router.get("/trash", async (req, res) => {
   res.render("./fbtrash");
 })
 router.get("/getRandom", async(req,res) => {
-  const random = Math.floor(Math.random() * 100 + 1)
-  console.log(random);
+  const count = await FBAccount.find().count();
+
+  const random = Math.floor(Math.random() * count + 1)
   const accounts = await FBAccount.find({}).skip(random).limit(4);
   let accountsRaw = "";
   accounts.forEach(account => {
