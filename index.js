@@ -12,6 +12,10 @@ const fbRoute = require('./routes/fbaccount');
 const userRoute = require('./routes/user');
 const mdeviceRoute = require('./routes/mdevice');
 var cookieParser = require('cookie-parser');
+var Imap = require('imap'),
+    inspect = require('util').inspect;
+    const MailParser = require('mailparser').MailParser;
+
 
 // databased route
 
@@ -95,6 +99,8 @@ app.use("/mdevice",mdeviceRoute);
 
 // Connect db
 mongoose.connect('mongodb://localhost:27017/', { useNewUrlParser: true, useUnifiedTopology: true });
+
+
 
 
 app.set('view engine', 'ejs');
@@ -187,11 +193,20 @@ app.get('/device/register', async (req, res) => {
 const deviceInfoUrl = `http://139.180.128.184:9999/api/fakeinfo/`;
 const deviceInfoOldUrl = `http://139.180.128.184:9999/api/fakeinfo/oldDevice`
 
+
+app.get("/testip", async(req,res) =>{
+  var ip = req.headers['x-forwarded-for'] ||
+    req.connection.remoteAddress ||
+    req.socket.remoteAddress ||deviceInfoUrl
+    (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  res.send(ip);
+})
 app.get("/device/new", async (req, res) => {
   // var ip = req.headers['x-forwarded-for'] ||
   //   req.connection.remoteAddress ||
-  //   req.socket.remoteAddress ||
+  //   req.socket.remoteAddress ||deviceInfoUrl
   //   (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  console.log("Get new device");
   const ip = req.query.ip;
   const os = req.query.os;
   const device = req.query.device;
@@ -231,7 +246,94 @@ app.get("/manager", async (req, res) => {
   res.sendFile(path.join(__dirname + "/views/manager.html"));
 })
 
+app.get('/tempmail', async(req,res) => {
 
+  var imap = new Imap({
+      user: 'admin@follow24h.net',
+      password: 'rW9A&aBVzqqmiA!',
+      host: 'imap.yandex.com',
+      port: 993,
+      tls: true
+  });
+   const {username} = req.query;
+  
+   imap.once('ready',execute);
+ 
+    imap.once('error', function(err) {
+      console.log(err);
+    });
+    
+    imap.once('end', function() {
+      console.log('Connection ended');
+    });
+    
+    imap.connect();
+
+    function execute(){
+         imap.openBox("INBOX", false, function(err, mailBox) {
+            if (err){
+              console.log(err);
+              return;
+            }
+            imap.search(["ALL"], function(err, results) {
+            if(!results || !results.length){console.log("No unread mails");imap.end();return;}
+            /* mark as seen
+            imap.setFlags(results, ['\\Seen'], function(err) {
+                if (!err) {
+                    console.log("marked as read");
+                } else {
+                    console.log(JSON.stringify(err, null, 2));
+                }
+            });*/
+
+            var f = imap.fetch(results, { bodies: "" });
+            f.on("message", processMessage);
+            f.once("error", function(err) {
+                return Promise.reject(err);
+            });
+            f.once("end", function() {
+                console.log("Done fetching all unseen messages.");
+                imap.end();
+            });
+            // console.log(mess);
+        });
+
+
+         })
+    }
+    function processMessage(msg, seqno) {
+            console.log("Processing msg #" + seqno);
+            // console.log(msg);
+
+            var parser = new MailParser();
+            parser.on("headers", function(headers) {
+                // console.log("Header: " + JSON.stringify(headers));
+            });
+
+            parser.on('data', data => {
+                if (data.type === 'text') {
+                    const message = {
+                      data: data.text, 
+                      code: "test",
+                      email: "test"
+                    }
+                }
+            });
+
+            msg.on("body", function(stream) {
+                stream.on("data", function(chunk) {
+                    parser.write(chunk.toString("utf8"));
+                });
+            });
+            msg.once("end", function() {
+                // console.log("Finished msg #" + seqno);
+                parser.end();
+            });
+            
+           
+      }
+  
+})
 
 
 io.on('connection', (socket) => {

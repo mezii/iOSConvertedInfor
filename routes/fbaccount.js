@@ -122,6 +122,18 @@ router.get("/trash", async (req, res) => {
 
   res.render("./fbtrash");
 })
+router.get("/getRandom", async(req,res) => {
+  const {count} = req.query;
+  const accounts = await FBAccount.find({}).limit(4);
+  let accountsRaw = "";
+  accounts.forEach(account => {
+      accountsRaw += account.uid + "|" + account.password + "|" + account.cookie +"<br/>";
+  })
+    res.set('Content-Type', 'text/html');
+
+  res.send(accountsRaw);
+
+})
 router.get("/random", async (req, res) => {
   const data = await fs.readFileSync(path.join(__dirname + "/uploads/trash.txt"), {
     encoding: "utf8",
