@@ -136,20 +136,33 @@ router.get("/getRandom", async(req,res) => {
   res.send(accountsRaw);
 
 })
+router.post("/nvr", async(req,res) =>{
+  const {username,password,isExported,cookie} = req.body;
+  if (!username || !password || !isExport || !cookie) res.status(400).send("Error");
+  const account = new FBAccount({
+    username: username,password: password, isExported: isExported, cookie: cookie
+  })
+  res.send(await account.save());
+})
+router.get("/nvr", async(req,res) =>{
+  const {number} = req.query;
+  const accounts = await FBAccount.find({}).sort({created: -1}).limit(parseInt(number));
+
+  res.send(accounts);
+  
+})
+
 router.get("/random", async (req, res) => {
   const data = await fs.readFileSync(path.join(__dirname + "/uploads/trash.txt"), {
     encoding: "utf8",
     flag: "r",
   });
   const dataArr = data.split("\n");
-  // res.setHeader('Content-Type', 'text/plain');
-
+  res.setHeader('Content-Type', 'text/plain');
   if (dataArr.length > 0) {
     const cookie = dataArr[Math.floor(Math.random() * dataArr.length + 1)];
-    const cookies = cookie.split('|');
-    if (cookies.length > 1) res.send(cookie);
-    else res.send("Cannot Parse Cookie");
-
+    res.send(cookie);
+  
   } else res.send("Error");
 })
 
