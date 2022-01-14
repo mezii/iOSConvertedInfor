@@ -37,6 +37,10 @@ const FBAccountSchema = new mongoose.Schema({
     created:{
         type: Date, 
         default: new Date()
+    },
+    isVerified: {
+        type: Boolean,
+        default: true
     }
 
 })

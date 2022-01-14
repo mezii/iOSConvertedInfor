@@ -136,18 +136,21 @@ router.get("/getRandom", async(req,res) => {
   res.send(accountsRaw);
 
 })
-router.post("/nvr", async(req,res) =>{
-  const {username,password,isExported,cookie} = req.body;
-  if (!username || !password || !isExport || !cookie) res.status(400).send("Error");
+router.post("/nvr", async(req,res) =>{ 
+  const {uid,password,cookie} = req.body;
+  if (!uid || !password || !cookie) res.status(400).send("Error");
   const account = new FBAccount({
-    username: username,password: password, isExported: isExported, cookie: cookie
+    uid: uid,password: password, isVerified: false, cookie: cookie
   })
   res.send(await account.save());
 })
-router.get("/nvr", async(req,res) =>{
+router.get("/nvr", async( req,res) =>{
   const {number} = req.query;
-  const accounts = await FBAccount.find({}).sort({created: -1}).limit(parseInt(number));
-
+  const accounts = await FBAccount.find({isVerfied: false}).sort({created: -1}).limit(parseInt(number));
+  accounts.forEach(async account => {
+    if (account.isVerified == false) account.isVerified = true;
+    await account.save();
+  })
   res.send(accounts);
   
 })
