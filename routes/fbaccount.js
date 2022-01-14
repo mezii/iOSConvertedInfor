@@ -146,7 +146,7 @@ router.post("/nvr", async(req,res) =>{
 })
 router.get("/nvr", async( req,res) =>{
   const {number} = req.query;
-  const accounts = await FBAccount.find({isVerfied: false}).sort({created: -1}).limit(parseInt(number));
+  const accounts = await FBAccount.find({isVerified: false}).sort({created: -1}).limit(parseInt(number));
   accounts.forEach(async account => {
     if (account.isVerified == false) account.isVerified = true;
     await account.save();
