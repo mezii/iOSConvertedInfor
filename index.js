@@ -9,6 +9,7 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http,{serverClient:true});
 const socketRoute = require('./routes/socket');
 const fbRoute = require('./routes/fbaccount');
+const fbUserRoute = require('./routes/fbuser')
 const userRoute = require('./routes/user');
 const mdeviceRoute = require('./routes/mdevice');
 var cookieParser = require('cookie-parser');
@@ -96,7 +97,7 @@ app.use("/socket", socketRoute)
 app.use("/fbaccount",fbRoute)
 app.use("/user", userRoute);
 app.use("/mdevice",mdeviceRoute);
-
+app.use("/fbuser", fbUserRoute);
 // Connect db
 mongoose.connect('mongodb://localhost:27017/', { useNewUrlParser: true, useUnifiedTopology: true });
 
