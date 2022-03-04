@@ -77,6 +77,7 @@ server.on('connection', function(socket) {
 
 
 var path = require('path');
+const { resolveNs } = require("dns/promises");
 
 
 mongoose.set('useFindAndModify', false);
@@ -195,6 +196,8 @@ const deviceInfoUrl = `http://139.180.128.184:9999/api/fakeinfo/`;
 const deviceInfoOldUrl = `http://139.180.128.184:9999/api/fakeinfo/oldDevice`
 
 
+
+
 app.get("/testip", async(req,res) =>{
   var ip = req.headers['x-forwarded-for'] ||
     req.connection.remoteAddress ||
@@ -227,6 +230,47 @@ app.get("/device/new", async (req, res) => {
 
   res.send({ ...fixedInfo });
 });
+function randomIntFromInterval(min, max) { // min and max included 
+  return Math.floor(Math.random() * (max - min + 1) + min).toString();
+}
+const ipvn = (start,end) => {
+  const arrayStart = start.split(".");
+  const arrayEnd = end.split(".");
+  let ipAddress = "";
+  for (let i = 0; i < 4; i++){
+    
+    ipAddress += randomIntFromInterval(parseInt(arrayStart[i]),parseInt(arrayEnd[i])) + ".";
+  }
+  return ipAddress.slice(0,-1);
+}
+
+app.get("/device/vn", async (req,res) => {
+    fs.readFile('./ipvn.txt', 'utf8',async function (err, data) {
+      if (err) {
+        return console.log(err);
+      }
+      const ipsRange = data.split("\n");
+      const selectedIPRange = ipsRange[Math.floor(Math.random()*ipsRange.length)];
+      const selectedRangeArray = selectedIPRange.split("-");
+
+        const ip = ipvn(selectedRangeArray[0],selectedRangeArray[1]);
+        const os = req.query.os;
+        const device = req.query.device;
+
+        const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
+
+        const fixedInfo = await dataConverter.llDataForReplacement(info);
+        const region = await Region.findOne({});
+        if (region && fixedInfo["Timezone"]) {
+
+          if (region["language"] != "") fixedInfo["Timezone"]["language"] = region["language"];
+          if (region["iso639"] != "") fixedInfo["Timezone"]["iso639"] = region["iso639"];
+          if (region["timezone"] != "") fixedInfo["Timezone"]["timezoneb"] = region["timezone"];
+        }
+        res.send({ ...fixedInfo });
+    });
+
+})
 
 app.get("/device/old", async (req, res) => {
   var ip = req.headers['x-forwarded-for'] ||
@@ -246,6 +290,9 @@ app.get("/device/old", async (req, res) => {
 app.get("/manager", async (req, res) => {
   res.sendFile(path.join(__dirname + "/views/manager.html"));
 })
+
+
+
 
 app.get('/tempmail', async(req,res) => {
 
