@@ -77,7 +77,6 @@ server.on('connection', function(socket) {
 
 
 var path = require('path');
-const { resolveNs } = require("dns/promises");
 
 
 mongoose.set('useFindAndModify', false);
