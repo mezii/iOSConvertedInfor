@@ -201,8 +201,13 @@ const deviceInfoOldUrl = `http://139.180.128.184:9999/api/fakeinfo/oldDevice`
 
 
 app.get("/testip", async(req,res) =>{
-  const ip = await dbapi.requestIpApi("171.245.44.135");
-  res.send(ip);
+  // const ip = await dbapi.requestIpApi("171.245.44.135");
+ const ip = req.query.ip;
+  const os = req.query.os;
+  const device = req.query.device;
+   const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
+
+  res.send(info);
 })
 app.get("/device/new", async (req, res) => {
   // var ip = req.headers['x-forwarded-for'] ||
