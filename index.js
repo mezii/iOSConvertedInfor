@@ -223,13 +223,13 @@ app.get("/device/new", async (req, res) => {
   const fixedInfo = await dataConverter.llDataForReplacement(info);
   const ipapi = await dbapi.requestIpApi(ip);
   fixedInfo["Timezone"] = ipapi;
-  const region = await Region.findOne({});
-  if (region && fixedInfo["Timezone"]) {
+  // const region = await Region.findOne({});
+  // if (region && fixedInfo["Timezone"]) {
 
-    if (region["language"] != "") fixedInfo["Timezone"]["language"] = region["language"];
-    if (region["iso639"] != "") fixedInfo["Timezone"]["iso639"] = region["iso639"];
-    if (region["timezone"] != "") fixedInfo["Timezone"]["timezoneb"] = region["timezone"];
-  }
+  //   if (region["language"] != "") fixedInfo["Timezone"]["language"] = region["language"];
+  //   if (region["iso639"] != "") fixedInfo["Timezone"]["iso639"] = region["iso639"];
+  //   if (region["timezone"] != "") fixedInfo["Timezone"]["timezoneb"] = region["timezone"];
+  // }
 
 
 
