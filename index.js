@@ -29,7 +29,6 @@ const Net = require('net');
 const port = 7777;
 
 
-
 const server = new Net.createServer(function(socket) {
 	socket.write('Echo server\r\n');
 	socket.pipe(socket);
@@ -171,7 +170,6 @@ app.get("/proxy.pac", (req, res) => {
   });
 })
 
-
 app.post("/proxy", (req, res) => {
   fs.writeFile('./proxy.pac', req.body.text, function (err) {
     if (err) return console.log(err);
@@ -192,10 +190,14 @@ app.get('/device/register', async (req, res) => {
 
 })
 
-const deviceInfoUrl = `http://139.180.128.184:9999/api/fakeinfo/`;
+const deviceInfoUrl = `http://fake.rktf.net:9999/api/fakeinfo`;
 const deviceInfoOldUrl = `http://139.180.128.184:9999/api/fakeinfo/oldDevice`
 
 
+app.get("/test", async (req,res) => {
+  const data = await dbapi.requestIpApi();
+  res.send(data)
+})
 
 
 app.get("/testip", async(req,res) =>{
@@ -210,7 +212,8 @@ app.get("/device/new", async (req, res) => {
   //   req.connection.remoteAddress ||
   //   req.socket.remoteAddress ||deviceInfoUrl
   //   (req.connection.socket ? req.connection.socket.remoteAddress : null);
-  console.log("Get new device");
+  // console.log("Get new device");
+  
   const ip = req.query.ip;
   const os = req.query.os;
   const device = req.query.device;
@@ -218,6 +221,8 @@ app.get("/device/new", async (req, res) => {
   const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
 
   const fixedInfo = await dataConverter.llDataForReplacement(info);
+  const ipapi = await dbapi.requestIpApi(ip);
+  fixedInfo["Timezone"] = ipapi;
   const region = await Region.findOne({});
   if (region && fixedInfo["Timezone"]) {
 
@@ -258,15 +263,16 @@ app.get("/device/vn", async (req,res) => {
         const device = req.query.device;
 
         const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
-
+        // const ipapi = await dbapi.requestIpApi();
+        // console.log(ipapi)
         const fixedInfo = await dataConverter.llDataForReplacement(info);
-        const region = await Region.findOne({});
-        if (region && fixedInfo["Timezone"]) {
+        // const region = await Region.findOne({});
+        // if ( fixedInfo["Timezone"]) {
 
-          if (region["language"] != "") fixedInfo["Timezone"]["language"] = region["language"];
-          if (region["iso639"] != "") fixedInfo["Timezone"]["iso639"] = region["iso639"];
-          if (region["timezone"] != "") fixedInfo["Timezone"]["timezoneb"] = region["timezone"];
-        }
+        //   if (region["language"] != "") fixedInfo["Timezone"]["language"] = region["language"];
+        //   if (region["iso639"] != "") fixedInfo["Timezone"]["iso639"] = region["iso639"];
+        //   if (region["timezone"] != "") fixedInfo["Timezone"]["timezoneb"] = region["timezone"];
+        // }
         res.send({ ...fixedInfo });
     });
 
