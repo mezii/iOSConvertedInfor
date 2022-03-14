@@ -214,8 +214,8 @@ app.get("/device/new", async (req, res) => {
   const os = req.query.os;
   const device = req.query.device;
 
-  const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
-  console.log(info);
+  // const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
+  // console.log(info);
   // const fixedInfo = await dataConverter.llDataForReplacement(info);
   // const region = await Region.findOne({});
   // if (region && fixedInfo["Timezone"]) {
