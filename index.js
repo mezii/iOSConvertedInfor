@@ -232,7 +232,7 @@ app.get("/device/new", async (req, res) => {
 function randomIntFromInterval(min, max) { // min and max included 
   return Math.floor(Math.random() * (max - min + 1) + min)
 }
-const ipvn = (start,end) => {
+const getIpVN = (start,end) => {
   const arrayStart = start.split(".");
   const arrayEnd = end.split(".");
   let ipAddress = "";
@@ -244,15 +244,19 @@ const ipvn = (start,end) => {
 }
 
 app.get("/device/vn", async (req,res) => {
-    fs.readFile('./ipvn.txt', 'utf8', function (err, data) {
+    fs.readFile('./ipvn.txt', 'utf8', async function (err, data) {
       if (err) {
         return console.log(err);
       }
       const ipsRange = data.split("\n");
       const selectedIPRange = ipsRange[Math.floor(Math.random()*ipsRange.length)];
       const selectedRangeArray = selectedIPRange.split("-");
-      console.log(selectedRangeArray);
-      res.send(ipvn(selectedRangeArray[0],selectedRangeArray[1]));
+      const ipvn = getIpVN(selectedRangeArray[0],selectedRangeArray[1]);
+      const info = await dbapi.deviceInfo(ipvn, req.query.os, req.query.device, deviceInfoUrl);
+      const fixedInfo = await dataConverter.llDataForReplacement(info);
+      res.send({ ...fixedInfo });
+
+
     });
 
 })
