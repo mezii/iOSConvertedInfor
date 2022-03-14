@@ -1,4 +1,3 @@
-const axios = require("axios").default;
 
 const ipUrl = "http://pro.ip-api.com/json/?fields=countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query&key=DcyaIbvQx69VZNA"
 let deviceInfo = async function getDeviceInfo(ipaddress,os,device,url) {
