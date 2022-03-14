@@ -13,12 +13,10 @@ const fbUserRoute = require('./routes/fbuser')
 const userRoute = require('./routes/user');
 const mdeviceRoute = require('./routes/mdevice');
 var cookieParser = require('cookie-parser');
-const https = require("https");
 var Imap = require('imap'),
     inspect = require('util').inspect;
     const MailParser = require('mailparser').MailParser;
 
-const axios = require("axios").default;
 
 // databased route
 
@@ -215,9 +213,6 @@ app.get("/device/new", async (req, res) => {
   const ip = req.query.ip;
   const os = req.query.os;
   const device = req.query.device;
-  const data =  axios.get(`https://pro.ip-api.com/json/${ip}?fields=countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query&key=DcyaIbvQx69VZNA`).then(response => {
-    res.send(response.data);
-  })
 
   // const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
 
@@ -232,6 +227,7 @@ app.get("/device/new", async (req, res) => {
 
 
 
+  res.send("Huydeptrai");
 });
 function randomIntFromInterval(min, max) { // min and max included 
   return Math.floor(Math.random() * (max - min + 1) + min).toString();
