@@ -1,6 +1,6 @@
 const axios = require("axios").default;
 
-const ipUrl = "http://pro.ip-api.com/json/?fields=countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query&key=DcyaIbvQx69VZNA"
+const ipUrl = "http://pro.ip-api.com/json/?fields=countryCode,lat,lon,timezone,offset,org,&key=DcyaIbvQx69VZNA"
 const deviceInfo = async function getDeviceInfo(ipaddress,os,device,url) {
   try {
     
@@ -16,7 +16,7 @@ const deviceInfo = async function getDeviceInfo(ipaddress,os,device,url) {
 
 const requestIpApi = async function getIpAddress(ipaddress){
   try {
-      const data = await axios.get(`https://pro.ip-api.com/json/${ipaddress}?fields=countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query&key=DcyaIbvQx69VZNA`);
+      const data = await axios.get(`https://pro.ip-api.com/json/${ipaddress}?fields=countryCode,lat,lon,timezone,offset,isp&key=DcyaIbvQx69VZNA`);
      return data.data
   }catch (error){
     return error;
