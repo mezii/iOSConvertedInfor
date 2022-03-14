@@ -29,54 +29,55 @@ const Net = require('net');
 const port = 7777;
 
 
-// const server = new Net.createServer(function(socket) {
-// 	socket.write('Echo server\r\n');
-// 	socket.pipe(socket);
-// });
+const server = new Net.createServer(function(socket) {
+	socket.write('Echo server\r\n');
+	socket.pipe(socket);
+});
 
-// server.listen(port, function() {
-//     console.log(`Server listening for connection requests on socket localhost:${port}`);
-// });
+server.listen(port, function() {
+    console.log(`Server listening for connection requests on socket localhost:${port}`);
+});
 
-// const sockets = [];
+const sockets = [];
 
 // When a client requests a connection with the server, the server creates a new
 // socket dedicated to that client.
-// server.on('connection', function(socket) {
-//     sockets.push(socket);
-//     socket.pipe(socket);
+server.on('connection', function(socket) {
+    sockets.push(socket);
+    socket.pipe(socket);
 
-//     console.log('A new connection has been established.');
+    console.log('A new connection has been established.');
 
-//     // Now that a TCP connection has been established, the server can send data to
-//     // the client by writing to its socket.
-//     socket.write('Welcome \n');
+    // Now that a TCP connection has been established, the server can send data to
+    // the client by writing to its socket.
+    socket.write('Welcome \n');
 
-//     // The server can also receive data from the client by reading from its socket.
-//     socket.on('data', function(chunk) {
-//         console.log(`Data received from client: ${chunk.toString()}`);
-//     });
+    // The server can also receive data from the client by reading from its socket.
+    socket.on('data', function(chunk) {
+        console.log(`Data received from client: ${chunk.toString()}`);
+    });
 
-//     // When the client requests to end the TCP connection with the server, the server
-//     // ends the connection.
-//     socket.on('end', function() {
-//         console.log('Closing connection with the client');
-//     });
+    // When the client requests to end the TCP connection with the server, the server
+    // ends the connection.
+    socket.on('end', function() {
+        console.log('Closing connection with the client');
+    });
 
-//     // Don't forget to catch error, for your own sake.
-//     socket.on('error', function(err) {
-//         console.log(`Error: ${err}`);
-//     });
-//     // socket.on('disconnect', function(){
-//     //   const i = sockets.indexOf(socket);
-//     //   console.log(`Socket ${i} is disconnected`);
-//     // })
-// });
+    // Don't forget to catch error, for your own sake.
+    socket.on('error', function(err) {
+        console.log(`Error: ${err}`);
+    });
+    // socket.on('disconnect', function(){
+    //   const i = sockets.indexOf(socket);
+    //   console.log(`Socket ${i} is disconnected`);
+    // })
+});
 
 
 
 
 var path = require('path');
+const { resolveNs } = require("dns/promises");
 
 
 mongoose.set('useFindAndModify', false);
@@ -93,7 +94,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
 
-// app.use("/socket", socketRoute)
+app.use("/socket", socketRoute)
 app.use("/fbaccount",fbRoute)
 app.use("/user", userRoute);
 app.use("/mdevice",mdeviceRoute);
@@ -170,6 +171,7 @@ app.get("/proxy.pac", (req, res) => {
   });
 })
 
+
 app.post("/proxy", (req, res) => {
   fs.writeFile('./proxy.pac', req.body.text, function (err) {
     if (err) return console.log(err);
@@ -190,63 +192,46 @@ app.get('/device/register', async (req, res) => {
 
 })
 
-const deviceInfoUrl = `http://fake.rktf.net:9999/api/fakeinfo`;
+const deviceInfoUrl = `http://139.180.128.184:9999/api/fakeinfo/`;
 const deviceInfoOldUrl = `http://139.180.128.184:9999/api/fakeinfo/oldDevice`
 
 
-// app.get("/test", (req,res) => {
-//   const data = await dbapi.
-//   res.send()
-// })
 
 
 app.get("/testip", async(req,res) =>{
-
-  
-  try {
-    const ip = req.query.ip;
-
-    const os = req.query.os;
-    const device = req.query.device;
-    // const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
-    const ipInfo = await dbapi.requestIpApi(ip);
-    // ipInfo["Myip"] = ip;
-    // info["Timezone"] = ipInfo;
-     res.send(ipInfo);
-     
-  } catch (error) {
-    res.send("error");
-  }
- 
+  var ip = req.headers['x-forwarded-for'] ||
+    req.connection.remoteAddress ||
+    req.socket.remoteAddress ||deviceInfoUrl
+    (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  res.send(ip);
 })
 app.get("/device/new", async (req, res) => {
   // var ip = req.headers['x-forwarded-for'] ||
   //   req.connection.remoteAddress ||
   //   req.socket.remoteAddress ||deviceInfoUrl
   //   (req.connection.socket ? req.connection.socket.remoteAddress : null);
-  // console.log("Get new device");
+  console.log("Get new device");
   const ip = req.query.ip;
   const os = req.query.os;
   const device = req.query.device;
 
+  const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
 
-  // const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
-  // console.log(info);
-  // const fixedInfo = await dataConverter.llDataForReplacement(info);
-  // const region = await Region.findOne({});
-  // if (region && fixedInfo["Timezone"]) {
+  const fixedInfo = await dataConverter.llDataForReplacement(info);
+  const region = await Region.findOne({});
+  if (region && fixedInfo["Timezone"]) {
 
-  //   if (region["language"] != "") fixedInfo["Timezone"]["language"] = region["language"];
-  //   if (region["iso639"] != "") fixedInfo["Timezone"]["iso639"] = region["iso639"];
-  //   if (region["timezone"] != "") fixedInfo["Timezone"]["timezoneb"] = region["timezone"];
-  // }
-
+    if (region["language"] != "") fixedInfo["Timezone"]["language"] = region["language"];
+    if (region["iso639"] != "") fixedInfo["Timezone"]["iso639"] = region["iso639"];
+    if (region["timezone"] != "") fixedInfo["Timezone"]["timezoneb"] = region["timezone"];
+  }
 
 
-  res.send("Huydeptrai");
+
+  res.send({ ...fixedInfo });
 });
 function randomIntFromInterval(min, max) { // min and max included 
-  return Math.floor(Math.random() * (max - min + 1) + min).toString();
+  return Math.floor(Math.random() * (max - min + 1) + min)
 }
 const ipvn = (start,end) => {
   const arrayStart = start.split(".");
@@ -259,33 +244,19 @@ const ipvn = (start,end) => {
   return ipAddress.slice(0,-1);
 }
 
-// app.get("/device/vn", async (req,res) => {
-//     fs.readFile('./ipvn.txt', 'utf8',async function (err, data) {
-//       if (err) {
-//         return console.log(err);
-//       }
-//       const ipsRange = data.split("\n");
-//       const selectedIPRange = ipsRange[Math.floor(Math.random()*ipsRange.length)];
-//       const selectedRangeArray = selectedIPRange.split("-");
+app.get("/device/vn", async (req,res) => {
+    fs.readFile('./ipvn.txt', 'utf8', function (err, data) {
+      if (err) {
+        return console.log(err);
+      }
+      const ipsRange = data.split("\n");
+      const selectedIPRange = ipsRange[Math.floor(Math.random()*ipsRange.length)];
+      const selectedRangeArray = selectedIPRange.split("-");
+      console.log(selectedRangeArray);
+      res.send(ipvn(selectedRangeArray[0],selectedRangeArray[1]));
+    });
 
-//         const ip = ipvn(selectedRangeArray[0],selectedRangeArray[1]);
-//         const os = req.query.os;
-//         const device = req.query.device;
-
-//         const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
-
-//         const fixedInfo = await dataConverter.llDataForReplacement(info);
-//         const region = await Region.findOne({});
-//         if (region && fixedInfo["Timezone"]) {
-
-//           if (region["language"] != "") fixedInfo["Timezone"]["language"] = region["language"];
-//           if (region["iso639"] != "") fixedInfo["Timezone"]["iso639"] = region["iso639"];
-//           if (region["timezone"] != "") fixedInfo["Timezone"]["timezoneb"] = region["timezone"];
-//         }
-//         res.send({ ...fixedInfo });
-//     });
-
-// })
+})
 
 app.get("/device/old", async (req, res) => {
   var ip = req.headers['x-forwarded-for'] ||
@@ -398,6 +369,13 @@ app.get('/tempmail', async(req,res) => {
   
 })
 
+
+io.on('connection', (socket) => {
+  // socket.on('chat message', msg => {
+  //   io.emit('chat message', msg);
+  // });
+  console.log("a user connected");
+});
 
 http.listen(PORT, () => {
   console.log(`Luna server running at http://localhost:${PORT}/`);
