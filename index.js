@@ -29,49 +29,49 @@ const Net = require('net');
 const port = 7777;
 
 
-const server = new Net.createServer(function(socket) {
-	socket.write('Echo server\r\n');
-	socket.pipe(socket);
-});
+// const server = new Net.createServer(function(socket) {
+// 	socket.write('Echo server\r\n');
+// 	socket.pipe(socket);
+// });
 
-server.listen(port, function() {
-    console.log(`Server listening for connection requests on socket localhost:${port}`);
-});
+// server.listen(port, function() {
+//     console.log(`Server listening for connection requests on socket localhost:${port}`);
+// });
 
-const sockets = [];
+// const sockets = [];
 
 // When a client requests a connection with the server, the server creates a new
 // socket dedicated to that client.
-server.on('connection', function(socket) {
-    sockets.push(socket);
-    socket.pipe(socket);
+// server.on('connection', function(socket) {
+//     sockets.push(socket);
+//     socket.pipe(socket);
 
-    console.log('A new connection has been established.');
+//     console.log('A new connection has been established.');
 
-    // Now that a TCP connection has been established, the server can send data to
-    // the client by writing to its socket.
-    socket.write('Welcome \n');
+//     // Now that a TCP connection has been established, the server can send data to
+//     // the client by writing to its socket.
+//     socket.write('Welcome \n');
 
-    // The server can also receive data from the client by reading from its socket.
-    socket.on('data', function(chunk) {
-        console.log(`Data received from client: ${chunk.toString()}`);
-    });
+//     // The server can also receive data from the client by reading from its socket.
+//     socket.on('data', function(chunk) {
+//         console.log(`Data received from client: ${chunk.toString()}`);
+//     });
 
-    // When the client requests to end the TCP connection with the server, the server
-    // ends the connection.
-    socket.on('end', function() {
-        console.log('Closing connection with the client');
-    });
+//     // When the client requests to end the TCP connection with the server, the server
+//     // ends the connection.
+//     socket.on('end', function() {
+//         console.log('Closing connection with the client');
+//     });
 
-    // Don't forget to catch error, for your own sake.
-    socket.on('error', function(err) {
-        console.log(`Error: ${err}`);
-    });
-    // socket.on('disconnect', function(){
-    //   const i = sockets.indexOf(socket);
-    //   console.log(`Socket ${i} is disconnected`);
-    // })
-});
+//     // Don't forget to catch error, for your own sake.
+//     socket.on('error', function(err) {
+//         console.log(`Error: ${err}`);
+//     });
+//     // socket.on('disconnect', function(){
+//     //   const i = sockets.indexOf(socket);
+//     //   console.log(`Socket ${i} is disconnected`);
+//     // })
+// });
 
 
 
@@ -93,7 +93,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
 
-app.use("/socket", socketRoute)
+// app.use("/socket", socketRoute)
 app.use("/fbaccount",fbRoute)
 app.use("/user", userRoute);
 app.use("/mdevice",mdeviceRoute);
