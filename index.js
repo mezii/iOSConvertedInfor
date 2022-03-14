@@ -214,8 +214,8 @@ app.get("/device/new", async (req, res) => {
   const os = req.query.os;
   const device = req.query.device;
 
-  // const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
-
+  const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
+  console.log(info);
   // const fixedInfo = await dataConverter.llDataForReplacement(info);
   // const region = await Region.findOne({});
   // if (region && fixedInfo["Timezone"]) {
@@ -383,12 +383,6 @@ app.get('/tempmail', async(req,res) => {
 })
 
 
-io.on('connection', (socket) => {
-  // socket.on('chat message', msg => {
-  //   io.emit('chat message', msg);
-  // });
-  console.log("a user connected");
-});
 
 http.listen(PORT, () => {
   console.log(`Luna server running at http://localhost:${PORT}/`);
