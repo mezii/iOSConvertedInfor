@@ -233,7 +233,7 @@ app.get("/device/new", async (req, res) => {
 
 
 
-  res.send({ ...fixedInfo });
+  res.send("helloWorld");
 });
 function randomIntFromInterval(min, max) { // min and max included 
   return Math.floor(Math.random() * (max - min + 1) + min).toString();
