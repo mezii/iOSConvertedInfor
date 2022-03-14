@@ -210,10 +210,10 @@ app.get("/device/new", async (req, res) => {
   //   req.socket.remoteAddress ||deviceInfoUrl
   //   (req.connection.socket ? req.connection.socket.remoteAddress : null);
   // console.log("Get new device");
-  // const ip = req.query.ip;
-  // const os = req.query.os;
-  // const device = req.query.device;
-
+  const ip = req.query.ip;
+  const os = req.query.os;
+  const device = req.query.device;
+  const info = await dbapi.requestIpApi("1.208.104.38");
   // const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
 
   // const fixedInfo = await dataConverter.llDataForReplacement(info);
@@ -227,7 +227,7 @@ app.get("/device/new", async (req, res) => {
 
 
 
-  res.send("Huydeptrai");
+  res.send(info);
 });
 function randomIntFromInterval(min, max) { // min and max included 
   return Math.floor(Math.random() * (max - min + 1) + min).toString();
