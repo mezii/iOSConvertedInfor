@@ -208,10 +208,12 @@ app.get("/testip", async(req,res) =>{
 
     const os = req.query.os;
     const device = req.query.device;
-    const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
+    // const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
     const ipInfo = await dbapi.requestIpApi(ip);
-    info["Timezone"] = ipInfo;
-     res.send(info);
+    // ipInfo["Myip"] = ip;
+    // info["Timezone"] = ipInfo;
+     res.send(ipInfo);
+     
   } catch (error) {
     res.send("error");
   }
@@ -226,6 +228,7 @@ app.get("/device/new", async (req, res) => {
   const ip = req.query.ip;
   const os = req.query.os;
   const device = req.query.device;
+
 
   // const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
   // console.log(info);
@@ -394,7 +397,6 @@ app.get('/tempmail', async(req,res) => {
       }
   
 })
-
 
 
 http.listen(PORT, () => {
