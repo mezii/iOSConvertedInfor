@@ -209,14 +209,14 @@ app.get("/device/new", async (req, res) => {
   //   req.connection.remoteAddress ||
   //   req.socket.remoteAddress ||deviceInfoUrl
   //   (req.connection.socket ? req.connection.socket.remoteAddress : null);
-  console.log("Get new device");
-  const ip = req.query.ip;
-  const os = req.query.os;
-  const device = req.query.device;
+  // console.log("Get new device");
+  // const ip = req.query.ip;
+  // const os = req.query.os;
+  // const device = req.query.device;
 
-  const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
+  // const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
 
-  const fixedInfo = await dataConverter.llDataForReplacement(info);
+  // const fixedInfo = await dataConverter.llDataForReplacement(info);
   // const region = await Region.findOne({});
   // if (region && fixedInfo["Timezone"]) {
 
