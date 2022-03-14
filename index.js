@@ -218,11 +218,11 @@ app.get("/device/new", async (req, res) => {
   const os = req.query.os;
   const device = req.query.device;
 
-  const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
+  const fixedInfo = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
 
-  const fixedInfo = await dataConverter.llDataForReplacement(info);
-  const ipapi = await dbapi.requestIpApi(ip);
-  fixedInfo["Timezone"] = ipapi;
+  // const fixedInfo = await dataConverter.llDataForReplacement(info);
+  // const ipapi = await dbapi.requestIpApi(ip);
+  // fixedInfo["Timezone"] = ipapi;
   // const region = await Region.findOne({});
   // if (region && fixedInfo["Timezone"]) {
 
