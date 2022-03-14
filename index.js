@@ -194,17 +194,14 @@ const deviceInfoUrl = `http://fake.rktf.net:9999/api/fakeinfo`;
 const deviceInfoOldUrl = `http://139.180.128.184:9999/api/fakeinfo/oldDevice`
 
 
-app.get("/test", async (req,res) => {
-  const data = await dbapi.requestIpApi();
-  res.send(data)
-})
+// app.get("/test", (req,res) => {
+//   const data = await dbapi.
+//   res.send()
+// })
 
 
 app.get("/testip", async(req,res) =>{
-  var ip = req.headers['x-forwarded-for'] ||
-    req.connection.remoteAddress ||
-    req.socket.remoteAddress ||deviceInfoUrl
-    (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  const ip = await dbapi.requestIpApi("171.245.44.135");
   res.send(ip);
 })
 app.get("/device/new", async (req, res) => {
@@ -212,28 +209,25 @@ app.get("/device/new", async (req, res) => {
   //   req.connection.remoteAddress ||
   //   req.socket.remoteAddress ||deviceInfoUrl
   //   (req.connection.socket ? req.connection.socket.remoteAddress : null);
-  // console.log("Get new device");
-  
+  console.log("Get new device");
   const ip = req.query.ip;
   const os = req.query.os;
   const device = req.query.device;
 
-  const fixedInfo = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
+  const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
 
-  // const fixedInfo = await dataConverter.llDataForReplacement(info);
-  // const ipapi = await dbapi.requestIpApi(ip);
-  // fixedInfo["Timezone"] = ipapi;
-  // const region = await Region.findOne({});
-  // if (region && fixedInfo["Timezone"]) {
+  const fixedInfo = await dataConverter.llDataForReplacement(info);
+  const region = await Region.findOne({});
+  if (region && fixedInfo["Timezone"]) {
 
-  //   if (region["language"] != "") fixedInfo["Timezone"]["language"] = region["language"];
-  //   if (region["iso639"] != "") fixedInfo["Timezone"]["iso639"] = region["iso639"];
-  //   if (region["timezone"] != "") fixedInfo["Timezone"]["timezoneb"] = region["timezone"];
-  // }
+    if (region["language"] != "") fixedInfo["Timezone"]["language"] = region["language"];
+    if (region["iso639"] != "") fixedInfo["Timezone"]["iso639"] = region["iso639"];
+    if (region["timezone"] != "") fixedInfo["Timezone"]["timezoneb"] = region["timezone"];
+  }
 
 
 
-  res.send("helloWorld");
+  res.send("Huydeptrai");
 });
 function randomIntFromInterval(min, max) { // min and max included 
   return Math.floor(Math.random() * (max - min + 1) + min).toString();
@@ -249,34 +243,33 @@ const ipvn = (start,end) => {
   return ipAddress.slice(0,-1);
 }
 
-app.get("/device/vn", async (req,res) => {
-    fs.readFile('./ipvn.txt', 'utf8',async function (err, data) {
-      if (err) {
-        return console.log(err);
-      }
-      const ipsRange = data.split("\n");
-      const selectedIPRange = ipsRange[Math.floor(Math.random()*ipsRange.length)];
-      const selectedRangeArray = selectedIPRange.split("-");
+// app.get("/device/vn", async (req,res) => {
+//     fs.readFile('./ipvn.txt', 'utf8',async function (err, data) {
+//       if (err) {
+//         return console.log(err);
+//       }
+//       const ipsRange = data.split("\n");
+//       const selectedIPRange = ipsRange[Math.floor(Math.random()*ipsRange.length)];
+//       const selectedRangeArray = selectedIPRange.split("-");
 
-        const ip = ipvn(selectedRangeArray[0],selectedRangeArray[1]);
-        const os = req.query.os;
-        const device = req.query.device;
+//         const ip = ipvn(selectedRangeArray[0],selectedRangeArray[1]);
+//         const os = req.query.os;
+//         const device = req.query.device;
 
-        const fixedInfo = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
-        // const ipapi = await dbapi.requestIpApi();
-        // console.log(ipapi)
-        // const fixedInfo = await dataConverter.llDataForReplacement(info);
-        // const region = await Region.findOne({});
-        // if ( fixedInfo["Timezone"]) {
+//         const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
 
-        //   if (region["language"] != "") fixedInfo["Timezone"]["language"] = region["language"];
-        //   if (region["iso639"] != "") fixedInfo["Timezone"]["iso639"] = region["iso639"];
-        //   if (region["timezone"] != "") fixedInfo["Timezone"]["timezoneb"] = region["timezone"];
-        // }
-        res.send({ ...fixedInfo });
-    });
+//         const fixedInfo = await dataConverter.llDataForReplacement(info);
+//         const region = await Region.findOne({});
+//         if (region && fixedInfo["Timezone"]) {
 
-})
+//           if (region["language"] != "") fixedInfo["Timezone"]["language"] = region["language"];
+//           if (region["iso639"] != "") fixedInfo["Timezone"]["iso639"] = region["iso639"];
+//           if (region["timezone"] != "") fixedInfo["Timezone"]["timezoneb"] = region["timezone"];
+//         }
+//         res.send({ ...fixedInfo });
+//     });
+
+// })
 
 app.get("/device/old", async (req, res) => {
   var ip = req.headers['x-forwarded-for'] ||
