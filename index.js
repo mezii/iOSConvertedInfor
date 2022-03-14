@@ -262,10 +262,10 @@ app.get("/device/vn", async (req,res) => {
         const os = req.query.os;
         const device = req.query.device;
 
-        const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
+        const fixedInfo = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
         // const ipapi = await dbapi.requestIpApi();
         // console.log(ipapi)
-        const fixedInfo = await dataConverter.llDataForReplacement(info);
+        // const fixedInfo = await dataConverter.llDataForReplacement(info);
         // const region = await Region.findOne({});
         // if ( fixedInfo["Timezone"]) {
 
