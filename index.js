@@ -191,8 +191,8 @@ app.get('/device/register', async (req, res) => {
 
 })
 
-// const deviceInfoUrl = `http://fake.rktf.net:9999/api/fakeinfo`;
-const deviceInfoUrl = `http://143.198.231.214:9999/api/fakeinfo`;
+const deviceInfoUrl = `http://fake.rktf.net:9999/api/fakeinfo`;
+// const deviceInfoUrl = `http://143.198.231.214:9999/api/fakeinfo`;
 
 const deviceInfoOldUrl = `http://139.180.128.184:9999/api/fakeinfo/oldDevice`
 
@@ -215,6 +215,7 @@ app.get("/device/new", async (req, res) => {
   const ip = req.query.ip;
   const os = req.query.os;
   const device = req.query.device;
+  
 
   const info = await dbapi.deviceInfo(ip, os, device, deviceInfoUrl);
 
